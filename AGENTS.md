@@ -387,6 +387,11 @@ Prettier, but it is committed: runtime code imports `Constants` from it
 (enum value lists), so the production build needs the file. After changing
 migrations, regenerate it with `npm run supabase:types` and commit the result.
 
+Run `npm run test:db` (integration tests against the local Supabase stack, see
+`tests/db/`) whenever you change migrations or RLS policies, and add or update
+tests there for new policies and RPCs. It refuses to run unless the Supabase URL
+is localhost, and tests only touch data they create themselves.
+
 ## Local dev workflow
 
 Normal working session: `npm run supabase:start` (safe to re-run if already

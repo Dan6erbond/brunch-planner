@@ -71,6 +71,7 @@ Scripts:
 | Script                                         | Purpose                                                                                               |
 | ---------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
 | `npm run verify`                               | Prettier check, ESLint and `tsc --noEmit`; run before committing                                      |
+| `npm run test:db`                              | Integration tests for RLS and RPCs against the local Supabase stack                                   |
 | `npm run format`                               | Prettier write and ESLint fix                                                                         |
 | `npm run build` / `npm run preview`            | Production build and local preview                                                                    |
 | `npm run supabase:migration:new -- <name>`     | Create a migration                                                                                    |
@@ -82,6 +83,14 @@ Scripts:
 | `npm run generate-routes`                      | Regenerate the route tree                                                                             |
 
 Use the `npm run supabase:*` scripts rather than a globally installed `supabase` binary; the CLI version is pinned in `package.json`.
+
+## Integration tests
+
+`npm run test:db` runs Vitest integration tests (`tests/db/**/*.test.ts`) against the local Supabase stack, covering RLS policies, collaborator roles and the RPCs (`get_invite`, `save_response`, `pick_date_winner`, ...). The stack must be running (`npm run supabase:start`).
+
+- Connection: `SUPABASE_URL`, `SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY` if set, otherwise parsed from `npm run supabase:status -- -o env`.
+- Localhost guard: the suite throws unless the URL host is `127.0.0.1` or `localhost`, so it can never run against a hosted project.
+- Isolation: every test file creates its own users (`t-<uuid>@test.local`, via the admin API) and data, only touches what it created, and deletes the users afterwards (their data cascades). Tests never count or list global rows, so they are safe to run against a local DB that holds your own data.
 
 ## Self-hosting
 
@@ -123,6 +132,11 @@ Use the `npm run supabase:*` scripts rather than a globally installed `supabase`
 6. Smoke test: register, create a menu and a brunch, open the invite link in a private window, submit an RSVP, and reload a deep link.
 
 Because the anon key is public, safety depends entirely on the RLS policies and RPCs in the migrations; do not edit the schema in the dashboard.
+
+## CI
+
+- `.github/workflows/verify.yml` runs on pull requests and pushes to `main`: Prettier check, ESLint, `tsc --noEmit` and a `vite build` (with dummy Supabase env vars) as separate jobs.
+- `.github/workflows/db-tests.yml` starts the local Supabase stack via the pinned CLI, runs `npm run test:db` and checks that `database.types.ts` is up to date. It only runs when Supabase, test or package files change, and can be started manually.
 
 ## Contributing
 
