@@ -10,6 +10,14 @@ export const brunchKeys = {
   detail: (id: string) => [...brunchKeys.all, 'detail', id] as const,
 }
 
+export const inviteKeys = {
+  all: ['invites'] as const,
+  detail: (brunchId: string) =>
+    [...inviteKeys.all, 'detail', brunchId] as const,
+  response: (responseId: string) =>
+    [...inviteKeys.all, 'response', responseId] as const,
+}
+
 export const authKeys = {
   all: ['auth'] as const,
   session: () => [...authKeys.all, 'session'] as const,

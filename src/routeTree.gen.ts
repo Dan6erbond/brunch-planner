@@ -17,6 +17,8 @@ import { Route as AuthedBrunchesIndexRouteImport } from './routes/_authed/brunch
 import { Route as AuthedBrunchesBrunchIdRouteImport } from './routes/_authed/brunches/$brunchId'
 import { Route as AuthedMenusIndexRouteImport } from './routes/_authed/menus/index'
 import { Route as AuthedMenusMenuIdRouteImport } from './routes/_authed/menus/$menuId'
+import { Route as InvitesBrunchIdIndexRouteImport } from './routes/invites/$brunchId/index'
+import { Route as InvitesBrunchIdResponseIdRouteImport } from './routes/invites/$brunchId/$responseId'
 
 const AuthedRoute = AuthedRouteImport.update({
   id: '/_authed',
@@ -57,6 +59,17 @@ const AuthedMenusMenuIdRoute = AuthedMenusMenuIdRouteImport.update({
   path: '/menus/$menuId',
   getParentRoute: () => AuthedRoute,
 } as any)
+const InvitesBrunchIdIndexRoute = InvitesBrunchIdIndexRouteImport.update({
+  id: '/invites/$brunchId/',
+  path: '/invites/$brunchId/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InvitesBrunchIdResponseIdRoute =
+  InvitesBrunchIdResponseIdRouteImport.update({
+    id: '/invites/$brunchId/$responseId',
+    path: '/invites/$brunchId/$responseId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthedIndexRoute
@@ -64,8 +77,10 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/brunches/$brunchId': typeof AuthedBrunchesBrunchIdRoute
   '/menus/$menuId': typeof AuthedMenusMenuIdRoute
+  '/invites/$brunchId/$responseId': typeof InvitesBrunchIdResponseIdRoute
   '/brunches/': typeof AuthedBrunchesIndexRoute
   '/menus/': typeof AuthedMenusIndexRoute
+  '/invites/$brunchId/': typeof InvitesBrunchIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
@@ -73,8 +88,10 @@ export interface FileRoutesByTo {
   '/': typeof AuthedIndexRoute
   '/brunches/$brunchId': typeof AuthedBrunchesBrunchIdRoute
   '/menus/$menuId': typeof AuthedMenusMenuIdRoute
+  '/invites/$brunchId/$responseId': typeof InvitesBrunchIdResponseIdRoute
   '/brunches': typeof AuthedBrunchesIndexRoute
   '/menus': typeof AuthedMenusIndexRoute
+  '/invites/$brunchId': typeof InvitesBrunchIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -84,8 +101,10 @@ export interface FileRoutesById {
   '/_authed/': typeof AuthedIndexRoute
   '/_authed/brunches/$brunchId': typeof AuthedBrunchesBrunchIdRoute
   '/_authed/menus/$menuId': typeof AuthedMenusMenuIdRoute
+  '/invites/$brunchId/$responseId': typeof InvitesBrunchIdResponseIdRoute
   '/_authed/brunches/': typeof AuthedBrunchesIndexRoute
   '/_authed/menus/': typeof AuthedMenusIndexRoute
+  '/invites/$brunchId/': typeof InvitesBrunchIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -95,8 +114,10 @@ export interface FileRouteTypes {
     | '/register'
     | '/brunches/$brunchId'
     | '/menus/$menuId'
+    | '/invites/$brunchId/$responseId'
     | '/brunches/'
     | '/menus/'
+    | '/invites/$brunchId/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
@@ -104,8 +125,10 @@ export interface FileRouteTypes {
     | '/'
     | '/brunches/$brunchId'
     | '/menus/$menuId'
+    | '/invites/$brunchId/$responseId'
     | '/brunches'
     | '/menus'
+    | '/invites/$brunchId'
   id:
     | '__root__'
     | '/_authed'
@@ -114,14 +137,18 @@ export interface FileRouteTypes {
     | '/_authed/'
     | '/_authed/brunches/$brunchId'
     | '/_authed/menus/$menuId'
+    | '/invites/$brunchId/$responseId'
     | '/_authed/brunches/'
     | '/_authed/menus/'
+    | '/invites/$brunchId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   AuthedRoute: typeof AuthedRouteWithChildren
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
+  InvitesBrunchIdResponseIdRoute: typeof InvitesBrunchIdResponseIdRoute
+  InvitesBrunchIdIndexRoute: typeof InvitesBrunchIdIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -182,6 +209,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedMenusMenuIdRouteImport
       parentRoute: typeof AuthedRoute
     }
+    '/invites/$brunchId/': {
+      id: '/invites/$brunchId/'
+      path: '/invites/$brunchId'
+      fullPath: '/invites/$brunchId/'
+      preLoaderRoute: typeof InvitesBrunchIdIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/invites/$brunchId/$responseId': {
+      id: '/invites/$brunchId/$responseId'
+      path: '/invites/$brunchId/$responseId'
+      fullPath: '/invites/$brunchId/$responseId'
+      preLoaderRoute: typeof InvitesBrunchIdResponseIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -208,6 +249,8 @@ const rootRouteChildren: RootRouteChildren = {
   AuthedRoute: AuthedRouteWithChildren,
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
+  InvitesBrunchIdResponseIdRoute: InvitesBrunchIdResponseIdRoute,
+  InvitesBrunchIdIndexRoute: InvitesBrunchIdIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
