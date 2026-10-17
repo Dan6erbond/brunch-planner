@@ -1,10 +1,9 @@
-
-@import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
-@import "@fontsource-variable/lora";
-@import "@fontsource-variable/merriweather";
-@import "@fontsource-variable/inter";
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+@import '@fontsource-variable/lora';
+@import '@fontsource-variable/merriweather';
+@import '@fontsource-variable/inter';
 
 @custom-variant dark (&:is(.dark *));
 

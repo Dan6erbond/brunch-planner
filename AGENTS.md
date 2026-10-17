@@ -132,7 +132,9 @@ export const menuQueries = {
       queryFn: async () => {
         const { data, error } = await supabase
           .from('menus')
-          .select('*, items(*, option_groups(*, option_choices(*)), addons(*), ingredients(*))')
+          .select(
+            '*, items(*, option_groups(*, option_choices(*)), addons(*), ingredients(*))',
+          )
           .eq('id', id)
           .single()
         if (error) throw error
@@ -250,6 +252,16 @@ Usage: `npm run supabase:migration:new -- add_menus_table`,
   (`components/layout/`, feature-level composition in `features/`). Anything
   that's a shadcn primitive, install it via `npm run ui:add` — don't
   hand-roll a button/input/select shadcn already ships.
+
+## Verification before committing
+
+Run `npm run verify` (Prettier check, ESLint, `tsc --noEmit`) and fix
+everything it reports before committing. `npm run format` auto-fixes
+formatting and lint where possible. Don't commit with a red `verify`.
+
+`src/lib/supabase/database.types.ts` is generated, gitignored, and excluded
+from ESLint and Prettier. After cloning or changing migrations, regenerate it
+with `npm run supabase:types`.
 
 ## Local dev workflow
 
