@@ -51,6 +51,10 @@ export default [
     rules: { '@typescript-eslint/no-unnecessary-condition': 'off' },
   },
   {
+    files: ['src/components/ui/calendar.tsx'],
+    rules: { '@typescript-eslint/no-shadow': 'off', 'no-shadow': 'off' },
+  },
+  {
     ignores: [
       'eslint.config.js',
       'prettier.config.js',
