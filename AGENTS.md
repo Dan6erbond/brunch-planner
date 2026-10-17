@@ -253,6 +253,23 @@ Usage: `npm run supabase:migration:new -- add_menus_table`,
   that's a shadcn primitive, install it via `npm run ui:add` — don't
   hand-roll a button/input/select shadcn already ships.
 
+## Infer, don't hand-write
+
+Derive types and shapes from a single source instead of restating them:
+
+- Zod schema is the base: `z.object({...})` first, then
+  `type X = z.infer<typeof schema>`. Never write an interface that mirrors a
+  schema, and derive variants with `.pick()` / `.omit()` / `.partial()` /
+  `.extend()` rather than redefining fields.
+- DB row/insert/update types come from `database.types.ts`
+  (`Tables<'menus'>`, `TablesInsert<'menus'>`, ...), not hand-typed.
+- Form values come from `formOptions<z.infer<...>>`, query data from the
+  `queryFn` return type (`queryOptions` infers it); no manual generics or
+  annotations where the compiler already knows the type.
+- Prefer `as const` + `typeof` / `keyof typeof` over duplicated string unions.
+- Avoid `any` and type assertions; if you need one, the types upstream are
+  usually wrong.
+
 ## Verification before committing
 
 Run `npm run verify` (Prettier check, ESLint, `tsc --noEmit`) and fix
