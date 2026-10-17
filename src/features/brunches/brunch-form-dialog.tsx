@@ -121,6 +121,11 @@ function BrunchForm({
         <form.AppField name="description">
           {(field) => <field.TextareaField label="Notes (optional)" rows={3} />}
         </form.AppField>
+        <form.AppField name="inviteOnly">
+          {(field) => (
+            <field.SwitchField label="Invite only (guests get a personal link)" />
+          )}
+        </form.AppField>
       </FieldGroup>
       <DialogFooter>
         <form.AppForm>

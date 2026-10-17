@@ -230,6 +230,16 @@ function BrunchView({ brunch }: { brunch: BrunchRow }) {
         <p className="text-sm text-muted-foreground">
           This brunch is a draft. Guests can’t see it until invites are sent.
         </p>
+      ) : brunch.invite_only ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Invite only</CardTitle>
+            <CardDescription>
+              Guests need their own link. Add them under Responses and copy each
+              person’s link to send it.
+            </CardDescription>
+          </CardHeader>
+        </Card>
       ) : (
         <Card>
           <CardHeader>
@@ -264,6 +274,8 @@ function BrunchView({ brunch }: { brunch: BrunchRow }) {
         brunchId={brunch.id}
         menuId={brunch.menu_id}
         isDraft={isDraft}
+        inviteOnly={brunch.invite_only}
+        canManage={canManage}
       />
 
       {isOwner && (
@@ -291,6 +303,7 @@ function BrunchView({ brunch }: { brunch: BrunchRow }) {
           startsAt: brunch.starts_at ?? '',
           location: brunch.location ?? '',
           description: brunch.description ?? '',
+          inviteOnly: brunch.invite_only,
         }}
         onSubmit={async (value) => {
           await updateBrunch.mutateAsync(value)

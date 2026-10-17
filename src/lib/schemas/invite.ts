@@ -37,6 +37,14 @@ export const inviteSchema = z.object({
   }),
 })
 export type Invite = z.infer<typeof inviteSchema>
+
+// get_invite withholds everything but this for invite-only brunches when the
+// caller holds no valid guest response id.
+export const lockedInviteSchema = z.object({
+  id: z.uuid(),
+  invite_only: z.literal(true),
+  locked: z.literal(true),
+})
 export type InviteItem = Invite['menu']['items'][number]
 
 export const savedResponseSchema = z.object({

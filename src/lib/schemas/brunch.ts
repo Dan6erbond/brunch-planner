@@ -10,6 +10,7 @@ export const brunchSchema = z.object({
   startsAt: z.string().min(1, 'Pick a date and time'),
   location: z.string().trim().max(120, 'Keep it under 120 characters'),
   description: z.string().trim().max(500, 'Keep it under 500 characters'),
+  inviteOnly: z.boolean(),
 })
 export type BrunchInput = z.infer<typeof brunchSchema>
 
@@ -25,6 +26,7 @@ export const brunchRowSchema = z.object({
   menu_id: z.uuid(),
   starts_at: z.string().nullable(),
   invites_sent_at: z.string().nullable(),
+  invite_only: z.boolean(),
   status: brunchStatusSchema,
   menus: z.object({ name: z.string() }).nullable(),
 })

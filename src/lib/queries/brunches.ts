@@ -17,7 +17,7 @@ const SELECT = '*, menus(name)'
 const toNullable = (value: string) => (value === '' ? null : value)
 
 const toRow = (input: BrunchInput) => {
-  const { title, menuId, startsAt, location, description } =
+  const { title, menuId, startsAt, location, description, inviteOnly } =
     brunchSchema.parse(input)
   return {
     title,
@@ -25,6 +25,7 @@ const toRow = (input: BrunchInput) => {
     starts_at: new Date(startsAt).toISOString(),
     location: toNullable(location),
     description: toNullable(description),
+    invite_only: inviteOnly,
   }
 }
 

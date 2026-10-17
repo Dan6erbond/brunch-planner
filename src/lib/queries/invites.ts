@@ -3,21 +3,30 @@ import {
   useMutation,
   useQueryClient,
 } from '@tanstack/react-query'
+import { z } from 'zod'
 import { supabase } from '#/lib/supabase/client'
-import { inviteSchema, savedResponseSchema } from '#/lib/schemas/invite'
+import {
+  inviteSchema,
+  lockedInviteSchema,
+  savedResponseSchema,
+} from '#/lib/schemas/invite'
 import { rsvpSchema, type RsvpInput } from '#/lib/schemas/rsvp'
 import { inviteKeys } from './keys'
 
 export const inviteQueries = {
-  detail: (brunchId: string) =>
+  detail: (brunchId: string, responseId?: string) =>
     queryOptions({
-      queryKey: inviteKeys.detail(brunchId),
+      queryKey: inviteKeys.detail(brunchId, responseId),
       queryFn: async () => {
         const { data, error } = await supabase.rpc('get_invite', {
           p_brunch_id: brunchId,
+          p_response_id: responseId,
         })
         if (error) throw error
-        return inviteSchema.nullable().parse(data)
+        return z
+          .union([inviteSchema, lockedInviteSchema])
+          .nullable()
+          .parse(data)
       },
     }),
   response: (responseId: string) =>

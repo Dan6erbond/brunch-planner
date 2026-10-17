@@ -21,8 +21,8 @@ export const brunchKeys = {
 
 export const inviteKeys = {
   all: ['invites'] as const,
-  detail: (brunchId: string) =>
-    [...inviteKeys.all, 'detail', brunchId] as const,
+  detail: (brunchId: string, responseId?: string) =>
+    [...inviteKeys.all, 'detail', brunchId, responseId ?? null] as const,
   response: (responseId: string) =>
     [...inviteKeys.all, 'response', responseId] as const,
 }

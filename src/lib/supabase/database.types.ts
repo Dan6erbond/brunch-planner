@@ -472,6 +472,9 @@ isOneToOne: false
 { Args: { "p_brunch_id": string }; Returns: string
                            },
 "get_invite":
+{ Args: { "p_brunch_id": string,"p_response_id"?: string }; Returns: Json
+                           },
+"get_invite_unchecked":
 { Args: { "p_brunch_id": string }; Returns: Json
                            },
 "get_response":

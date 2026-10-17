@@ -8,7 +8,9 @@ export const Route = createFileRoute('/invites/$brunchId/$responseId')({
   validateSearch: z.object({ saved: z.boolean().optional() }),
   loader: async ({ context, params }) => {
     await Promise.all([
-      context.queryClient.query(inviteQueries.detail(params.brunchId)),
+      context.queryClient.query(
+        inviteQueries.detail(params.brunchId, params.responseId),
+      ),
       context.queryClient.query(inviteQueries.response(params.responseId)),
     ])
   },

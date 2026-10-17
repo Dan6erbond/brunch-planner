@@ -33,12 +33,21 @@ function Notice({ title, children }: { title: string; children: string }) {
 }
 
 export function InvitePage({ brunchId, responseId, saved }: InvitePageProps) {
-  const { data: invite } = useSuspenseQuery(inviteQueries.detail(brunchId))
+  const { data: invite } = useSuspenseQuery(
+    inviteQueries.detail(brunchId, responseId),
+  )
   if (!invite) {
     return (
       <Notice title="Invite not found">
         This link doesn’t work. It may be wrong, or the host hasn’t sent the
         invites yet.
+      </Notice>
+    )
+  }
+  if ('locked' in invite) {
+    return (
+      <Notice title="This brunch needs a personal link">
+        The host shares a separate link with each guest. Ask them for yours.
       </Notice>
     )
   }

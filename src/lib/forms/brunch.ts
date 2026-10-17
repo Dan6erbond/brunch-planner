@@ -7,6 +7,7 @@ const brunchDefaults: BrunchInput = {
   startsAt: '',
   location: '',
   description: '',
+  inviteOnly: false,
 }
 
 export const brunchFormOptions = formOptions({
