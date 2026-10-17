@@ -18,18 +18,18 @@ import {
 } from '#/components/ui/dropdown-menu'
 import {
   menuQueries,
+  type MenuItemDetail,
   useDeleteItem,
   useDeleteMenu,
   useReorderItems,
   useUpdateMenu,
 } from '#/lib/queries/menus'
-import type { Tables } from '#/lib/supabase/database.types'
 import { ConfirmDeleteDialog } from './confirm-delete-dialog'
 import { MenuItemEditSheet } from './menu-item-edit-sheet'
 import { MenuItemList } from './menu-item-list'
 import { NameDescriptionDialog } from './name-description-dialog'
 
-type ItemRow = Tables<'items'>
+type ItemRow = MenuItemDetail
 
 export function MenuEditor({ menuId }: { menuId: string }) {
   const { data: menu } = useSuspenseQuery(menuQueries.detail(menuId))

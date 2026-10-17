@@ -1,4 +1,5 @@
 import {
+  type InferDataFromTag,
   queryOptions,
   useMutation,
   useQueryClient,
@@ -40,16 +41,26 @@ export const menuQueries = {
       queryFn: async () => {
         const { data, error } = await supabase
           .from('menus')
-          .select('*, items(*)')
+          .select('*, items(*, option_groups(*, option_choices(*)), addons(*))')
           .eq('id', id)
           .order('position', { referencedTable: 'items' })
           .order('created_at', { referencedTable: 'items' })
+          .order('position', { referencedTable: 'items.option_groups' })
+          .order('position', {
+            referencedTable: 'items.option_groups.option_choices',
+          })
+          .order('position', { referencedTable: 'items.addons' })
           .maybeSingle()
         if (error) throw error
         return data
       },
     }),
 }
+
+export type MenuDetail = NonNullable<
+  InferDataFromTag<unknown, ReturnType<typeof menuQueries.detail>['queryKey']>
+>
+export type MenuItemDetail = MenuDetail['items'][number]
 
 export function useCreateMenu() {
   const queryClient = useQueryClient()
@@ -121,8 +132,13 @@ export function useCreateItem(menuId: string) {
         description: toNullable(description),
         position: last ? last.position + 1 : 0,
       }
-      const { error } = await supabase.from('items').insert(row)
+      const { data, error } = await supabase
+        .from('items')
+        .insert(row)
+        .select()
+        .single()
       if (error) throw error
+      return data
     },
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: menuKeys.detail(menuId) }),

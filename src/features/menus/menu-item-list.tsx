@@ -30,9 +30,9 @@ import {
   DropdownMenuTrigger,
 } from '#/components/ui/dropdown-menu'
 import { cn } from '#/lib/utils'
-import type { Tables } from '#/lib/supabase/database.types'
+import type { MenuItemDetail } from '#/lib/queries/menus'
 
-type ItemRow = Tables<'items'>
+type ItemRow = MenuItemDetail
 
 type MenuItemListProps = {
   items: ItemRow[]
@@ -87,6 +87,19 @@ export function MenuItemList({
   )
 }
 
+const plural = (count: number, noun: string) =>
+  `${String(count)} ${noun}${count === 1 ? '' : 's'}`
+
+function OptionSummary({ item }: { item: ItemRow }) {
+  const parts = [
+    item.option_groups.length > 0 &&
+      plural(item.option_groups.length, 'option group'),
+    item.addons.length > 0 && plural(item.addons.length, 'add-on'),
+  ].filter(Boolean)
+  if (parts.length === 0) return null
+  return <p className="text-xs text-muted-foreground">{parts.join(', ')}</p>
+}
+
 function SortableItemRow({
   item,
   onEdit,
@@ -134,6 +147,7 @@ function SortableItemRow({
             {item.description}
           </p>
         )}
+        <OptionSummary item={item} />
       </div>
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger render={<Button variant="ghost" size="icon" />}>

@@ -13,6 +13,12 @@ export type MenuInput = z.infer<typeof menuSchema>
 export const itemSchema = menuSchema.pick({ name: true, description: true })
 export type ItemInput = z.infer<typeof itemSchema>
 
+export const nameSchema = menuSchema.pick({ name: true })
+export type NameInput = z.infer<typeof nameSchema>
+
+export const optionGroupSchema = nameSchema.extend({ required: z.boolean() })
+export type OptionGroupInput = z.infer<typeof optionGroupSchema>
+
 export const reorderItemsSchema = z.object({
   menuId: z.uuid(),
   itemIds: z.array(z.uuid()).min(1),
