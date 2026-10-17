@@ -25,8 +25,9 @@ import { menuQueries, type MenuDetail } from '#/lib/queries/menus'
 import {
   countGuests,
   describePicks,
-  hasResponded,
-  isAttending,
+  guestStatus,
+  guestStatusLabels,
+  type GuestStatus,
   summarizeItems,
 } from './response-summary'
 import { AddGuestForm } from './add-guest-form'
@@ -136,12 +137,13 @@ function ResponsesTabs({
   )
 }
 
+const badgeVariants: Record<GuestStatus, 'default' | 'secondary' | 'outline'> =
+  { attending: 'default', declined: 'secondary', waiting: 'outline' }
+
 function GuestStatus({ response }: { response: BrunchResponse }) {
-  if (!hasResponded(response)) return <Badge variant="outline">Waiting</Badge>
-  return isAttending(response) ? (
-    <Badge>Attending</Badge>
-  ) : (
-    <Badge variant="secondary">Declined</Badge>
+  const status = guestStatus(response)
+  return (
+    <Badge variant={badgeVariants[status]}>{guestStatusLabels[status]}</Badge>
   )
 }
 

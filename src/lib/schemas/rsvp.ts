@@ -1,6 +1,12 @@
 import { z } from 'zod'
+import { Constants } from '#/lib/supabase/database.types'
 
 export const MAX_QUANTITY = 20
+
+export const responseStatusSchema = z.enum(
+  Constants.public.Enums.response_status,
+)
+export type ResponseStatus = z.infer<typeof responseStatusSchema>
 
 const rsvpGroupSchema = z.object({
   groupId: z.string(),
@@ -42,5 +48,6 @@ export const rsvpSchema = z.object({
       message: 'Choose at least one item',
     }),
 })
+export const declineSchema = rsvpSchema.pick({ guestName: true, notes: true })
 export type RsvpInput = z.infer<typeof rsvpSchema>
 export type RsvpItemInput = RsvpInput['items'][number]

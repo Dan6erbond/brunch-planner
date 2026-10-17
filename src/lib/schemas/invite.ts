@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { responseStatusSchema } from './rsvp'
 import { itemSchema, menuSchema, nameSchema, optionGroupSchema } from './menu'
 
 const withId = { id: z.uuid() }
@@ -52,6 +53,7 @@ export const savedResponseSchema = z.object({
   brunch_id: z.uuid(),
   guest_name: z.string(),
   notes: z.string().nullable(),
+  status: responseStatusSchema.nullable(),
   items: z.array(
     z.object({
       item_id: z.uuid(),

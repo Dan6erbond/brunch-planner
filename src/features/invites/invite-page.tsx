@@ -182,5 +182,11 @@ function InviteBody({
       </Alert>
     )
   }
-  return <RsvpForm key={response?.id} invite={invite} response={response} />
+  return (
+    <RsvpForm
+      key={`${response?.id}:${response?.status}`}
+      invite={invite}
+      response={response}
+    />
+  )
 }

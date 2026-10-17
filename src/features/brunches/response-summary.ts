@@ -1,26 +1,43 @@
 import type { BrunchResponse } from '#/lib/queries/brunches'
 import type { MenuDetail } from '#/lib/queries/menus'
+import type { ResponseStatus } from '#/lib/schemas/rsvp'
 
 type Response = BrunchResponse
 type ResponseItem = Response['response_items'][number]
 
-export const hasResponded = (response: Response) =>
-  response.responded_at !== null
+export type GuestStatus = ResponseStatus | 'waiting'
 
-// Guests must pick at least one item to submit, so a submitted response with no
-// surviving items (e.g. its menu items were deleted) counts as declined.
+export const guestStatusLabels: Record<GuestStatus, string> = {
+  attending: 'Attending',
+  declined: 'Declined',
+  waiting: 'Waiting',
+}
+
+// The stored status wins. Rows without one fall back to the old rule: not
+// submitted is waiting, submitted with no items is declined.
+export function guestStatus(response: Response): GuestStatus {
+  if (response.status) return response.status
+  if (response.responded_at === null) return 'waiting'
+  return response.response_items.length > 0 ? 'attending' : 'declined'
+}
+
+export const hasResponded = (response: Response) =>
+  guestStatus(response) !== 'waiting'
+
 export const isAttending = (response: Response) =>
-  hasResponded(response) && response.response_items.length > 0
+  guestStatus(response) === 'attending'
 
 export function countGuests(responses: Response[]) {
-  const attending = responses.filter(isAttending).length
-  const responded = responses.filter(hasResponded).length
+  const count = (status: GuestStatus) =>
+    responses.filter((response) => guestStatus(response) === status).length
+  const attending = count('attending')
+  const declined = count('declined')
   return {
     invited: responses.length,
-    responded,
+    responded: attending + declined,
     attending,
-    declined: responded - attending,
-    pending: responses.length - responded,
+    declined,
+    pending: count('waiting'),
   }
 }
 

@@ -10,7 +10,12 @@ import {
   lockedInviteSchema,
   savedResponseSchema,
 } from '#/lib/schemas/invite'
-import { rsvpSchema, type RsvpInput } from '#/lib/schemas/rsvp'
+import {
+  declineSchema,
+  rsvpSchema,
+  type ResponseStatus,
+  type RsvpInput,
+} from '#/lib/schemas/rsvp'
 import { inviteKeys } from './keys'
 
 export const inviteQueries = {
@@ -42,11 +47,21 @@ export const inviteQueries = {
     }),
 }
 
-const toPayload = (input: RsvpInput) => {
+const toPayload = (input: RsvpInput, declined: boolean) => {
+  if (declined) {
+    const { guestName, notes } = declineSchema.parse(input)
+    return {
+      guest_name: guestName,
+      notes: notes === '' ? null : notes,
+      status: 'declined' satisfies ResponseStatus,
+      items: [],
+    }
+  }
   const { guestName, notes, items } = rsvpSchema.parse(input)
   return {
     guest_name: guestName,
     notes: notes === '' ? null : notes,
+    status: 'attending' satisfies ResponseStatus,
     items: items
       .filter((item) => item.quantity > 0)
       .map((item) => ({
@@ -66,15 +81,17 @@ export function useSaveResponse(brunchId: string) {
     mutationFn: async ({
       responseId,
       input,
+      declined = false,
     }: {
       responseId: string | null
       input: RsvpInput
+      declined?: boolean
     }) => {
       const { data, error } = await supabase.rpc('save_response', {
         p_brunch_id: brunchId,
         // The generated arg type is non-null, but null means "create".
         p_response_id: responseId ?? undefined,
-        p_payload: toPayload(input),
+        p_payload: toPayload(input, declined),
       })
       if (error) throw error
       return data

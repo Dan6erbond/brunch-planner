@@ -77,7 +77,7 @@ export const brunchQueries = {
         const { data, error } = await supabase
           .from('responses')
           .select(
-            'id, guest_name, notes, responded_at, created_at, response_items(id, item_id, quantity, response_item_choices(option_choice_id), response_item_addons(addon_id))',
+            'id, guest_name, notes, status, responded_at, created_at, response_items(id, item_id, quantity, response_item_choices(option_choice_id), response_item_addons(addon_id))',
           )
           .eq('brunch_id', id)
           .order('created_at')

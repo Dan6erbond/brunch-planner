@@ -1,12 +1,15 @@
+import { Alert, AlertDescription, AlertTitle } from '#/components/ui/alert'
+import { Button } from '#/components/ui/button'
 import { Card, CardContent } from '#/components/ui/card'
 import type { Invite, SavedResponse } from '#/lib/schemas/invite'
 import { rsvpDefaults, rsvpFormOptions } from '#/lib/forms/rsvp'
 
 import { FieldGroup } from '#/components/ui/field'
-import { MAX_QUANTITY } from '#/lib/schemas/rsvp'
+import { MAX_QUANTITY, declineSchema } from '#/lib/schemas/rsvp'
 import { toast } from 'sonner'
 import { useAppForm } from '#/lib/forms/use-app-form'
 import { useNavigate } from '@tanstack/react-router'
+import type { RsvpInput } from '#/lib/schemas/rsvp'
 import { useSaveResponse } from '#/lib/queries/invites'
 
 type RsvpFormProps = { invite: Invite; response: SavedResponse | null }
@@ -14,25 +17,36 @@ type RsvpFormProps = { invite: Invite; response: SavedResponse | null }
 export function RsvpForm({ invite, response }: RsvpFormProps) {
   const navigate = useNavigate()
   const saveResponse = useSaveResponse(invite.id)
+  const isDeclined = response?.status === 'declined'
   const form = useAppForm({
     ...rsvpFormOptions(rsvpDefaults(invite, response)),
-    onSubmit: async ({ value }) => {
-      try {
-        const responseId = await saveResponse.mutateAsync({
-          responseId: response?.id ?? null,
-          input: value,
-        })
-        await navigate({
-          to: '/invites/$brunchId/$responseId',
-          params: { brunchId: invite.id, responseId },
-          search: { saved: true },
-        })
-        window.scrollTo({ top: 0 })
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'Something broke')
-      }
-    },
+    onSubmit: ({ value }) => save(value, false),
   })
+
+  async function save(value: RsvpInput, declined: boolean) {
+    try {
+      const responseId = await saveResponse.mutateAsync({
+        responseId: response?.id ?? null,
+        input: value,
+        declined,
+      })
+      await navigate({
+        to: '/invites/$brunchId/$responseId',
+        params: { brunchId: invite.id, responseId },
+        search: { saved: true },
+      })
+      window.scrollTo({ top: 0 })
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Something broke')
+    }
+  }
+
+  async function decline() {
+    form.setFieldMeta('guestName', (meta) => ({ ...meta, isTouched: true }))
+    await form.validateField('guestName', 'change')
+    if (!declineSchema.safeParse(form.state.values).success) return
+    await save(form.state.values, true)
+  }
 
   return (
     <form
@@ -43,6 +57,16 @@ export function RsvpForm({ invite, response }: RsvpFormProps) {
         void form.handleSubmit()
       }}
     >
+      {isDeclined && (
+        <Alert>
+          <AlertTitle>You’ve told the host you can’t make it</AlertTitle>
+          <AlertDescription>
+            Changed your mind? Pick what you’d like below and send your
+            response.
+          </AlertDescription>
+        </Alert>
+      )}
+
       <FieldGroup>
         <form.AppField name="guestName">
           {(field) => (
@@ -152,6 +176,20 @@ export function RsvpForm({ invite, response }: RsvpFormProps) {
           label={response ? 'Update my response' : 'Send my response'}
           pendingLabel="Sending…"
         />
+        {!isDeclined && (
+          <Button
+            type="button"
+            variant="outline"
+            size="lg"
+            className="h-12 w-full text-base"
+            disabled={saveResponse.isPending}
+            onClick={() => {
+              void decline()
+            }}
+          >
+            Can’t make it
+          </Button>
+        )}
       </form.AppForm>
     </form>
   )

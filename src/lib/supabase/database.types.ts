@@ -385,14 +385,14 @@ isOneToOne: false
                   ]
                 },"responses": {
                   Row: {
-                    "brunch_id": string,"created_at": string,"guest_name": string,"id": string,"notes": string | null,"responded_at": string | null,"updated_at": string
+                    "brunch_id": string,"created_at": string,"guest_name": string,"id": string,"notes": string | null,"responded_at": string | null,"status": Database["public"]['Enums']["response_status"] | null,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "brunch_id": string,"created_at"?: string,"guest_name": string,"id"?: string,"notes"?: string | null,"responded_at"?: string | null,"updated_at"?: string
+                    "brunch_id": string,"created_at"?: string,"guest_name": string,"id"?: string,"notes"?: string | null,"responded_at"?: string | null,"status"?: Database["public"]['Enums']["response_status"] | null,"updated_at"?: string
                   }
                   Update: {
-                    "brunch_id"?: string,"created_at"?: string,"guest_name"?: string,"id"?: string,"notes"?: string | null,"responded_at"?: string | null,"updated_at"?: string
+                    "brunch_id"?: string,"created_at"?: string,"guest_name"?: string,"id"?: string,"notes"?: string | null,"responded_at"?: string | null,"status"?: Database["public"]['Enums']["response_status"] | null,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -534,7 +534,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "brunch_collaborator_role": "viewer"|"co_host","brunch_scheduling": "fixed"|"poll","date_availability": "yes"|"maybe","ingredient_unit": "g"|"kg"|"ml"|"l"|"tsp"|"tbsp"|"cup"|"piece","menu_collaborator_role": "viewer"|"editor"
+            "brunch_collaborator_role": "viewer"|"co_host","brunch_scheduling": "fixed"|"poll","date_availability": "yes"|"maybe","ingredient_unit": "g"|"kg"|"ml"|"l"|"tsp"|"tbsp"|"cup"|"piece","menu_collaborator_role": "viewer"|"editor","response_status": "attending"|"declined"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -654,7 +654,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "brunch_collaborator_role": ["viewer", "co_host"],"brunch_scheduling": ["fixed", "poll"],"date_availability": ["yes", "maybe"],"ingredient_unit": ["g", "kg", "ml", "l", "tsp", "tbsp", "cup", "piece"],"menu_collaborator_role": ["viewer", "editor"]
+            "brunch_collaborator_role": ["viewer", "co_host"],"brunch_scheduling": ["fixed", "poll"],"date_availability": ["yes", "maybe"],"ingredient_unit": ["g", "kg", "ml", "l", "tsp", "tbsp", "cup", "piece"],"menu_collaborator_role": ["viewer", "editor"],"response_status": ["attending", "declined"]
           }
         }
 } as const
