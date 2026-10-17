@@ -366,9 +366,10 @@ Run `npm run verify` (Prettier check, ESLint, `tsc --noEmit`) and fix
 everything it reports before committing. `npm run format` auto-fixes
 formatting and lint where possible. Don't commit with a red `verify`.
 
-`src/lib/supabase/database.types.ts` is generated, gitignored, and excluded
-from ESLint and Prettier. After cloning or changing migrations, regenerate it
-with `npm run supabase:types`.
+`src/lib/supabase/database.types.ts` is generated and excluded from ESLint and
+Prettier, but it is committed: runtime code imports `Constants` from it
+(enum value lists), so the production build needs the file. After changing
+migrations, regenerate it with `npm run supabase:types` and commit the result.
 
 ## Local dev workflow
 
