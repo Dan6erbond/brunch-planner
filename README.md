@@ -1,189 +1,133 @@
-Welcome to your new TanStack Start app!
+# Brunch Planner
 
-# Getting Started
+Plan recurring brunches and know what to buy beforehand. A host builds reusable menus, creates brunches from them, shares an invite link, and reads the guests' responses back as an aggregated shopping list.
 
-To run this application:
+## Features
+
+- Reusable menus with items; each item can have option groups (single choice, e.g. bread), add-ons (multi choice, e.g. extra egg) and an ingredient list.
+- Brunches pick one menu and either a fixed date and time or a date and time poll that guests vote on.
+- Public invite links at `/invites/:id`: no login for guests, mobile-first RSVP form, attend or decline.
+- Invite-only brunches with a per-guest link.
+- Aggregated shopping list built from the ingredients of everything guests picked.
+- Sharing menus and brunches with collaborators and co-hosts, and copying a menu.
+- Auth (Supabase Auth) is only needed on the host side.
+
+## Tech stack
+
+- Vite, React 19 and TypeScript, client-side only.
+- TanStack Router in router-only mode (file-based routes, no TanStack Start server), TanStack Query for server state, TanStack Form with Zod schemas.
+- shadcn/ui (Base UI) on Tailwind CSS v4.
+- Supabase: Postgres, Auth and Row Level Security, accessed directly from the browser with `@supabase/supabase-js`.
+- Hosting: Cloudflare Workers static assets (any static host with SPA fallback also works).
+
+## Architecture
+
+There is no custom backend. The browser talks to Supabase with the public publishable (anon) key, so security rests on the database.
+
+- Hosts read and write their own data through tables protected by RLS policies.
+- Guests never read tables directly. The public invite page and RSVP submission go through `security definer` RPC functions that expose only what an invite needs.
+- The schema is defined solely by `supabase/migrations/`; RLS policies live in the same migration that creates a table.
+
+```
+src/
+  routes/            TanStack Router file routes (thin: loader + layout glue)
+  components/
+    ui/              shadcn primitives (generated via CLI)
+    form/            reusable field and form components for the app form hook
+    layout/          app shell, nav, invite shell
+  features/          domain UI: menus, brunches, invites, auth
+  lib/
+    supabase/        client.ts and generated database.types.ts
+    queries/         TanStack Query key factories, queryOptions and mutations
+    forms/           app form hook and formOptions
+    schemas/         Zod schemas shared by forms and mutations
+supabase/
+  config.toml
+  migrations/        timestamped SQL migrations
+```
+
+Conventions (query registry, form composition, type inference, migration rules) are documented in [AGENTS.md](AGENTS.md).
+
+## Local development
+
+Prerequisites: Node.js 22 (see `.node-version`), npm and Docker (the local Supabase stack runs in containers).
 
 ```bash
 npm install
+npm run supabase:start
+cp .env.example .env
+npm run supabase:status
 npm run dev
 ```
 
-# Building For Production
+1. `npm run supabase:start` starts the local Supabase stack and applies the migrations. It is safe to re-run.
+2. Put the API URL and the publishable (anon) key printed by `npm run supabase:status` into `.env` as `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
+3. `npm run dev` serves the app at http://localhost:3000.
 
-To build this application for production:
+Local email confirmation is off (`enable_confirmations = false` in `supabase/config.toml`), so registering signs you in immediately. Mailpit (the local email inbox) is enabled at http://127.0.0.1:54324 if you turn confirmations on. Supabase Studio runs at http://127.0.0.1:54323.
 
-```bash
-npm run build
-```
+Scripts:
 
-## Styling
+| Script                                         | Purpose                                                                                               |
+| ---------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `npm run verify`                               | Prettier check, ESLint and `tsc --noEmit`; run before committing                                      |
+| `npm run format`                               | Prettier write and ESLint fix                                                                         |
+| `npm run build` / `npm run preview`            | Production build and local preview                                                                    |
+| `npm run supabase:migration:new -- <name>`     | Create a migration                                                                                    |
+| `npm run supabase:migration:up:local`          | Apply pending migrations to the local DB                                                              |
+| `npm run supabase:db:reset:local`              | Wipe and rebuild the local DB (destroys local data)                                                   |
+| `npm run supabase:types`                       | Regenerate `src/lib/supabase/database.types.ts` from the local DB; commit the result after migrations |
+| `npm run ui:add -- <component>`                | Add a shadcn component, then run `npm run format`                                                     |
+| `npm run supabase:start` / `:stop` / `:status` | Manage the local stack                                                                                |
+| `npm run generate-routes`                      | Regenerate the route tree                                                                             |
 
-This project uses [Tailwind CSS](https://tailwindcss.com/) for styling.
+Use the `npm run supabase:*` scripts rather than a globally installed `supabase` binary; the CLI version is pinned in `package.json`.
 
-### Removing Tailwind CSS
+## Self-hosting
 
-If you prefer not to use Tailwind CSS:
+1. Create a project at [supabase.com](https://supabase.com) (see the [docs](https://supabase.com/docs)). The free tier is enough.
+2. Link and push the migrations:
 
-1. Remove the demo pages in `src/routes/demo/`
-2. Replace the Tailwind import in `src/styles.css` with your own styles
-3. Remove `tailwindcss()` from the plugins array in `vite.config.ts`
-4. Remove `@tailwindcss/vite` and `tailwindcss` from `package.json`
+   ```bash
+   npx supabase login
+   npx supabase link --project-ref <your-project-ref>
+   npm run supabase:migration:up:remote
+   ```
 
-## Linting & Formatting
+   `npm run supabase:migration:list` compares local and remote migrations. `link` prompts for the database password.
 
-This project uses [eslint](https://eslint.org/) and [prettier](https://prettier.io/) for linting and formatting. Eslint is configured using [tanstack/eslint-config](https://tanstack.com/config/latest/docs/eslint). The following scripts are available:
+3. Configure Auth in the Supabase dashboard (Authentication):
+   - Set the Site URL (URL Configuration) to your deployed app URL and add it to the redirect URLs. `supabase/config.toml` only contains local values (`http://127.0.0.1:3000`); do not push it as is.
+   - Decide on email confirmation (Sign In / Providers, Email, Confirm email). The hosted default is on and uses Supabase's built-in SMTP, which is heavily rate limited; local development has it off.
+4. Set the environment variables (read only at build time, baked into the bundle):
 
-```bash
-npm run lint
-npm run format
-npm run check
-```
+   | Variable                 | Value                                                                                     |
+   | ------------------------ | ----------------------------------------------------------------------------------------- |
+   | `VITE_SUPABASE_URL`      | Project URL from the Supabase dashboard                                                   |
+   | `VITE_SUPABASE_ANON_KEY` | Publishable (anon) key. Public by design; never use the secret or `service_role` key here |
 
-## Routing
+   Vite loads `.env.production` for `npm run build`; rebuild and redeploy after changing values.
 
-This project uses [TanStack Router](https://tanstack.com/router) with file-based routing. Routes are managed as files in `src/routes`.
+5. Build and deploy:
 
-### Adding A Route
+   ```bash
+   npm run build
+   npx wrangler login
+   npx wrangler deploy
+   ```
 
-To add a new route to your application just add a new file in the `./src/routes` directory.
+   `wrangler.jsonc` serves `./dist` as Workers static assets with `not_found_handling: "single-page-application"`, so deep links such as `/invites/:id` fall back to `index.html`. Change the Worker `name` in `wrangler.jsonc` for your own deployment.
 
-TanStack will automatically generate the content of the route file for you.
+   Any other static host works too if it serves `dist/` with a fallback to `index.html` for unknown paths.
 
-Now that you have two routes you can use a `Link` component to navigate between them.
+6. Smoke test: register, create a menu and a brunch, open the invite link in a private window, submit an RSVP, and reload a deep link.
 
-### Adding Links
+Because the anon key is public, safety depends entirely on the RLS policies and RPCs in the migrations; do not edit the schema in the dashboard.
 
-To use SPA (Single Page Application) navigation you will need to import the `Link` component from `@tanstack/react-router`.
+## Contributing
 
-```tsx
-import { Link } from '@tanstack/react-router'
-```
+Read [AGENTS.md](AGENTS.md) first: it defines where code lives, the query and form conventions, and the migration rules. Run `npm run verify` and keep it green before opening a pull request.
 
-Then anywhere in your JSX you can use it like so:
+## License
 
-```tsx
-<Link to="/about">About</Link>
-```
-
-This will create a link that will navigate to the `/about` route.
-
-More information on the `Link` component can be found in the [Link documentation](https://tanstack.com/router/v1/docs/framework/react/api/router/linkComponent).
-
-### Using A Layout
-
-In the File Based Routing setup the layout is located in `src/routes/__root.tsx`. Anything you add to the root route will appear in all the routes. The route content will appear in the JSX where you render `{children}` in the `shellComponent`.
-
-Here is an example layout that includes a header:
-
-```tsx
-import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
-
-export const Route = createRootRoute({
-  head: () => ({
-    meta: [
-      { charSet: 'utf-8' },
-      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { title: 'My App' },
-    ],
-  }),
-  shellComponent: ({ children }) => (
-    <html lang="en">
-      <head>
-        <HeadContent />
-      </head>
-      <body>
-        <header>
-          <nav>
-            <Link to="/">Home</Link>
-            <Link to="/about">About</Link>
-          </nav>
-        </header>
-        {children}
-        <Scripts />
-      </body>
-    </html>
-  ),
-})
-```
-
-More information on layouts can be found in the [Layouts documentation](https://tanstack.com/router/latest/docs/framework/react/guide/routing-concepts#layouts).
-
-## Server Functions
-
-TanStack Start provides server functions that allow you to write server-side code that seamlessly integrates with your client components.
-
-```tsx
-import { createServerFn } from '@tanstack/react-start'
-
-const getServerTime = createServerFn({
-  method: 'GET',
-}).handler(async () => {
-  return new Date().toISOString()
-})
-
-// Use in a component
-function MyComponent() {
-  const [time, setTime] = useState('')
-
-  useEffect(() => {
-    getServerTime().then(setTime)
-  }, [])
-
-  return <div>Server time: {time}</div>
-}
-```
-
-## API Routes
-
-You can create API routes by using the `server` property in your route definitions:
-
-```tsx
-import { createFileRoute } from '@tanstack/react-router'
-import { json } from '@tanstack/react-start'
-
-export const Route = createFileRoute('/api/hello')({
-  server: {
-    handlers: {
-      GET: () => json({ message: 'Hello, World!' }),
-    },
-  },
-})
-```
-
-## Data Fetching
-
-There are multiple ways to fetch data in your application. You can use TanStack Query to fetch data from a server. But you can also use the `loader` functionality built into TanStack Router to load the data for a route before it's rendered.
-
-For example:
-
-```tsx
-import { createFileRoute } from '@tanstack/react-router'
-
-export const Route = createFileRoute('/people')({
-  loader: async () => {
-    const response = await fetch('https://swapi.dev/api/people')
-    return response.json()
-  },
-  component: PeopleComponent,
-})
-
-function PeopleComponent() {
-  const data = Route.useLoaderData()
-  return (
-    <ul>
-      {data.results.map((person) => (
-        <li key={person.name}>{person.name}</li>
-      ))}
-    </ul>
-  )
-}
-```
-
-Loaders simplify your data fetching logic dramatically. Check out more information in the [Loader documentation](https://tanstack.com/router/latest/docs/framework/react/guide/data-loading#loader-parameters).
-
-# Learn More
-
-You can learn more about all of the offerings from TanStack in the [TanStack documentation](https://tanstack.com).
-
-For TanStack Start specific documentation, visit [TanStack Start](https://tanstack.com/start).
+[MIT](LICENSE)
