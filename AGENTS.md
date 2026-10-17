@@ -223,6 +223,9 @@ Rules:
 - No validation logic or default-value literals duplicated in the component.
   Submit into the matching mutation from `lib/queries/` (use `mutateAsync` in
   `onSubmit` so `SubmitButton` shows the pending state).
+- `SubmitButton` disables itself while submitting or while the form is not
+  submittable (`canSubmit`, i.e. validation errors), so don't add your own
+  `disabled` logic for those cases.
 
 ## Supabase: schema, RLS, migrations
 

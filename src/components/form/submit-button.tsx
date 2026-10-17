@@ -16,10 +16,11 @@ export function SubmitButton({
 }: SubmitButtonProps) {
   const form = useFormContext()
   const isSubmitting = useSelector(form.store, (state) => state.isSubmitting)
+  const canSubmit = useSelector(form.store, (state) => state.canSubmit)
   return (
     <Button
       type="submit"
-      disabled={disabled === true || isSubmitting}
+      disabled={disabled === true || isSubmitting || !canSubmit}
       {...buttonProps}
     >
       {isSubmitting ? pendingLabel : label}
