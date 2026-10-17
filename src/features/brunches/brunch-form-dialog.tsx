@@ -12,6 +12,7 @@ import {
 import { FieldGroup } from '#/components/ui/field'
 import { brunchFormOptions } from '#/lib/forms/brunch'
 import { useAppForm } from '#/lib/forms/use-app-form'
+import { useUserId } from '#/lib/queries/auth'
 import { menuQueries } from '#/lib/queries/menus'
 import type { BrunchInput } from '#/lib/schemas/brunch'
 
@@ -56,7 +57,8 @@ function BrunchForm({
 }: Omit<BrunchFormDialogProps, 'open' | 'onOpenChange'> & {
   onDone: () => void
 }) {
-  const { data: menus } = useSuspenseQuery(menuQueries.list())
+  const userId = useUserId()
+  const { data: menus } = useSuspenseQuery(menuQueries.list(userId))
   const form = useAppForm({
     ...brunchFormOptions,
     defaultValues: initialValues ?? brunchFormOptions.defaultValues,

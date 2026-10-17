@@ -15,6 +15,7 @@ import {
 } from '#/components/ui/collapsible'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { ToggleGroup, ToggleGroupItem } from '#/components/ui/toggle-group'
+import { useUserId } from '#/lib/queries/auth'
 import { brunchQueries, useCreateBrunch } from '#/lib/queries/brunches'
 import { formatStartsAt, splitUpcomingAndPast } from './brunch-format'
 
@@ -35,7 +36,8 @@ const filters: ReadonlyArray<{ value: StatusFilter; label: string }> = [
 ]
 
 export function BrunchList() {
-  const { data: brunches } = useSuspenseQuery(brunchQueries.list())
+  const userId = useUserId()
+  const { data: brunches } = useSuspenseQuery(brunchQueries.list(userId))
   const navigate = useNavigate()
   const createBrunch = useCreateBrunch()
   const [creating, setCreating] = useState(false)

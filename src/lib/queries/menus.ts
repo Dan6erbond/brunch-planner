@@ -21,14 +21,15 @@ const FOREIGN_KEY_VIOLATION = '23503'
 const toNullable = (value: string) => (value === '' ? null : value)
 
 export const menuQueries = {
-  list: () =>
+  list: (userId: string) =>
     queryOptions({
-      queryKey: menuKeys.list(),
+      queryKey: menuKeys.list(userId),
       staleTime: 30_000,
       queryFn: async () => {
         const { data, error } = await supabase
           .from('menus')
           .select('*, items(count)')
+          .eq('owner_id', userId)
           .order('created_at', { ascending: false })
         if (error) throw error
         return data
@@ -83,7 +84,7 @@ export function useCreateMenu() {
       return data
     },
     onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: menuKeys.list() }),
+      queryClient.invalidateQueries({ queryKey: menuKeys.lists() }),
   })
 }
 

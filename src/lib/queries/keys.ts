@@ -1,12 +1,14 @@
 export const menuKeys = {
   all: ['menus'] as const,
-  list: () => [...menuKeys.all, 'list'] as const,
+  lists: () => [...menuKeys.all, 'list'] as const,
+  list: (userId: string) => [...menuKeys.lists(), userId] as const,
   detail: (id: string) => [...menuKeys.all, 'detail', id] as const,
 }
 
 export const brunchKeys = {
   all: ['brunches'] as const,
-  list: () => [...brunchKeys.all, 'list'] as const,
+  lists: () => [...brunchKeys.all, 'list'] as const,
+  list: (userId: string) => [...brunchKeys.lists(), userId] as const,
   detail: (id: string) => [...brunchKeys.all, 'detail', id] as const,
   responses: (id: string) => [...brunchKeys.detail(id), 'responses'] as const,
 }

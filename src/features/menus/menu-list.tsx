@@ -28,6 +28,7 @@ import {
   useDeleteMenu,
   useUpdateMenu,
 } from '#/lib/queries/menus'
+import { useUserId } from '#/lib/queries/auth'
 import type { Tables } from '#/lib/supabase/database.types'
 import { ConfirmDeleteDialog } from './confirm-delete-dialog'
 import { NameDescriptionDialog } from './name-description-dialog'
@@ -35,7 +36,8 @@ import { NameDescriptionDialog } from './name-description-dialog'
 type MenuRow = Tables<'menus'>
 
 export function MenuList() {
-  const { data: menus } = useSuspenseQuery(menuQueries.list())
+  const userId = useUserId()
+  const { data: menus } = useSuspenseQuery(menuQueries.list(userId))
   const navigate = useNavigate()
   const createMenu = useCreateMenu()
   const deleteMenu = useDeleteMenu()

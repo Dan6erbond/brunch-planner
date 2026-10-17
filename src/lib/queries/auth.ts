@@ -1,5 +1,6 @@
 import {
   queryOptions,
+  useSuspenseQuery,
   useMutation,
   useQueryClient,
   type QueryClient,
@@ -24,6 +25,18 @@ export const authQueries = {
       },
       staleTime: Infinity,
     }),
+}
+
+export async function ensureUserId(queryClient: QueryClient) {
+  const session = await queryClient.query(authQueries.session())
+  if (!session) throw new Error('Not signed in')
+  return session.user.id
+}
+
+export function useUserId() {
+  const { data: session } = useSuspenseQuery(authQueries.session())
+  if (!session) throw new Error('Not signed in')
+  return session.user.id
 }
 
 export function subscribeAuthSession(queryClient: QueryClient) {

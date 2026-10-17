@@ -29,14 +29,15 @@ const toRow = (input: BrunchInput) => {
 }
 
 export const brunchQueries = {
-  list: () =>
+  list: (userId: string) =>
     queryOptions({
-      queryKey: brunchKeys.list(),
+      queryKey: brunchKeys.list(userId),
       staleTime: 30_000,
       queryFn: async () => {
         const { data, error } = await supabase
           .from('brunches_with_status')
           .select(SELECT)
+          .eq('owner_id', userId)
           .order('starts_at', { ascending: true, nullsFirst: false })
         if (error) throw error
         return data.map((row) => brunchRowSchema.parse(row))
