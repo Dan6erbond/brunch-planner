@@ -407,6 +407,16 @@ s3_secret_key = "env(S3_SECRET_KEY)"
 # Set enabled = false to fall back to the legacy migra engine.
 [experimental.pgdelta]
 enabled = true
+
+[remotes.production]
+project_id = "acukzoboowdxsmtodqyp"
+
+[remotes.production.auth]
+site_url = "https://brunch-planner.moravrav.workers.dev"
+additional_redirect_urls = ["https://brunch-planner.moravrav.workers.dev"]
+
+[remotes.production.auth.email]
+enable_confirmations = false
 # Directory under `supabase/` where declarative files are written.
 # declarative_schema_path = "./schemas"
 # JSON string passed through to pg-delta SQL formatting. When omitted, SQL is

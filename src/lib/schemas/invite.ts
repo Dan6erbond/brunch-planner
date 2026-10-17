@@ -1,22 +1,22 @@
 import { z } from 'zod'
 import { brunchStatusSchema } from './brunch'
+import { itemSchema, menuSchema, nameSchema, optionGroupSchema } from './menu'
 
-const optionChoiceSchema = z.object({ id: z.uuid(), name: z.string() })
+const withId = { id: z.uuid() }
 
-const optionGroupSchema = z.object({
-  id: z.uuid(),
-  name: z.string(),
-  required: z.boolean(),
+const optionChoiceSchema = nameSchema.extend(withId)
+
+const inviteOptionGroupSchema = optionGroupSchema.extend({
+  ...withId,
   option_choices: z.array(optionChoiceSchema),
 })
 
-const addonSchema = z.object({ id: z.uuid(), name: z.string() })
+const addonSchema = nameSchema.extend(withId)
 
-const inviteItemSchema = z.object({
-  id: z.uuid(),
-  name: z.string(),
-  description: z.string().nullable(),
-  option_groups: z.array(optionGroupSchema),
+const inviteItemSchema = itemSchema.extend({
+  ...withId,
+  description: itemSchema.shape.description.nullable(),
+  option_groups: z.array(inviteOptionGroupSchema),
   addons: z.array(addonSchema),
 })
 
@@ -30,9 +30,8 @@ export const inviteSchema = z.object({
   invite_only: z.boolean(),
   host_name: z.string().nullable(),
   status: brunchStatusSchema,
-  menus: z.object({
-    name: z.string(),
-    description: z.string().nullable(),
+  menus: menuSchema.extend({
+    description: menuSchema.shape.description.nullable(),
     items: z.array(inviteItemSchema),
   }),
 })
