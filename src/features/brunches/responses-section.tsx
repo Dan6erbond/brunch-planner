@@ -164,9 +164,10 @@ function GuestList({
     <ul className="grid gap-2">
       {responses.map((response) => {
         const picks = describePicks(menu, response)
+        const expandable = picks.length > 0 || Boolean(response.notes)
         return (
           <li key={response.id} className="rounded-lg border">
-            <Collapsible>
+            <Collapsible disabled={!expandable}>
               <div className="flex items-center gap-1 pr-2">
                 <CollapsibleTrigger className="flex min-w-0 flex-1 items-center justify-between gap-3 p-3 text-left">
                   <span className="grid min-w-0 gap-1">
@@ -181,7 +182,9 @@ function GuestList({
                   </span>
                   <span className="flex shrink-0 items-center gap-2">
                     <GuestStatus response={response} />
-                    <ChevronDownIcon className="size-4 text-muted-foreground" />
+                    {expandable && (
+                      <ChevronDownIcon className="size-4 text-muted-foreground" />
+                    )}
                   </span>
                 </CollapsibleTrigger>
                 {manageGuests && (
@@ -225,9 +228,7 @@ function GuestList({
                 )}
               </div>
               <CollapsibleContent className="grid gap-3 border-t p-3 text-sm">
-                {picks.length === 0 ? (
-                  <p className="text-muted-foreground">No picks.</p>
-                ) : (
+                {picks.length > 0 && (
                   <ul className="grid gap-2">
                     {picks.map((pick) => {
                       const extras = [
