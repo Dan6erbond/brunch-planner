@@ -29,10 +29,6 @@ export function SelectField({
   const id = useId()
   const invalid = field.state.meta.isTouched && !field.state.meta.isValid
   const current = field.state.value
-  const items =
-    current && !options.some((option) => option.value === current)
-      ? [...options, { value: current, label: current }]
-      : options
   return (
     <Field data-invalid={invalid}>
       <FieldLabel htmlFor={id} className={cn(hideLabel && 'sr-only')}>
@@ -40,7 +36,7 @@ export function SelectField({
       </FieldLabel>
       <Select
         name={field.name}
-        items={items}
+        items={options}
         value={current || null}
         onValueChange={(value) => {
           field.handleChange(value ?? '')
@@ -58,7 +54,7 @@ export function SelectField({
           {clearLabel && current && (
             <SelectItem value={null}>{clearLabel}</SelectItem>
           )}
-          {items.map((option) => (
+          {options.map((option) => (
             <SelectItem key={option.value} value={option.value}>
               {option.label}
             </SelectItem>

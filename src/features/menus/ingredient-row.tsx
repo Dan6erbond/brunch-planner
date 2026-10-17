@@ -62,6 +62,7 @@ export function NameWithIngredients({
         <IngredientList
           menuId={menuId}
           parent={parent}
+          parentName={name}
           ingredients={ingredients}
         />
       </CollapsibleContent>

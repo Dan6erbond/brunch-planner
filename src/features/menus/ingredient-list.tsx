@@ -1,25 +1,25 @@
 import { Trash2Icon } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '#/components/ui/button'
-import { ingredientFormOptions } from '#/lib/forms/ingredient'
+import { ingredientFormOptionsFor } from '#/lib/forms/ingredient'
 import { useAppForm } from '#/lib/forms/use-app-form'
 import {
   useCreateIngredient,
   useDeleteIngredient,
   useUpdateIngredient,
 } from '#/lib/queries/ingredients'
-import {
-  INGREDIENT_UNITS,
-  type IngredientInput,
-  type IngredientParent,
+import type {
+  IngredientInput,
+  IngredientParent,
 } from '#/lib/schemas/ingredient'
 import type { Tables } from '#/lib/supabase/database.types'
+import { unitOptions } from './ingredient-units'
 
 const errorMessage = (error: unknown) =>
   error instanceof Error ? error.message : 'Something broke'
 
 const toFormValues = (ingredient: Tables<'ingredients'>): IngredientInput => ({
-  name: ingredient.name,
+  name: ingredient.name ?? '',
   quantity: ingredient.quantity === null ? '' : String(ingredient.quantity),
   unit: ingredient.unit ?? '',
 })
@@ -28,12 +28,14 @@ type IngredientListProps = {
   menuId: string
   parent: IngredientParent
   ingredients: Tables<'ingredients'>[]
+  parentName?: string
 }
 
 export function IngredientList({
   menuId,
   parent,
   ingredients,
+  parentName,
 }: IngredientListProps) {
   const createIngredient = useCreateIngredient(menuId)
   const updateIngredient = useUpdateIngredient(menuId)
@@ -45,11 +47,14 @@ export function IngredientList({
         {ingredients.map((ingredient) => (
           <li key={ingredient.id}>
             <IngredientRow
+              kind={parent.kind}
+              parentName={parentName}
               initialValues={toFormValues(ingredient)}
               submitLabel="Save"
               onSubmit={(input) =>
                 updateIngredient.mutateAsync({
                   ingredientId: ingredient.id,
+                  kind: parent.kind,
                   ...input,
                 })
               }
@@ -65,6 +70,8 @@ export function IngredientList({
         ))}
       </ul>
       <IngredientRow
+        kind={parent.kind}
+        parentName={parentName}
         submitLabel="Add"
         onSubmit={(input) => createIngredient.mutateAsync({ parent, ...input })}
       />
@@ -73,6 +80,8 @@ export function IngredientList({
 }
 
 type IngredientRowProps = {
+  kind: IngredientParent['kind']
+  parentName?: string
   submitLabel: string
   initialValues?: IngredientInput
   onSubmit: (input: IngredientInput) => Promise<unknown>
@@ -80,14 +89,17 @@ type IngredientRowProps = {
 }
 
 function IngredientRow({
+  kind,
+  parentName,
   submitLabel,
   initialValues,
   onSubmit,
   onDelete,
 }: IngredientRowProps) {
+  const formOptions = ingredientFormOptionsFor(kind)
   const form = useAppForm({
-    ...ingredientFormOptions,
-    defaultValues: initialValues ?? ingredientFormOptions.defaultValues,
+    ...formOptions,
+    defaultValues: initialValues ?? formOptions.defaultValues,
     onSubmit: async ({ value }) => {
       try {
         await onSubmit(value)
@@ -113,7 +125,7 @@ function IngredientRow({
             <field.TextField
               label="Ingredient name"
               hideLabel
-              placeholder="Ingredient"
+              placeholder={parentName ? `Same as ${parentName}` : 'Ingredient'}
               autoComplete="off"
             />
           )}
@@ -137,7 +149,7 @@ function IngredientRow({
             hideLabel
             placeholder="Unit"
             clearLabel="No unit"
-            options={INGREDIENT_UNITS}
+            options={unitOptions}
           />
         )}
       </form.AppField>

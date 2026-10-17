@@ -343,6 +343,11 @@ Derive types and shapes from a single source instead of restating them:
   `queryFn` return type (`queryOptions` infers it); no manual generics or
   annotations where the compiler already knows the type.
 - Prefer `as const` + `typeof` / `keyof typeof` over duplicated string unions.
+- Closed value sets (units, statuses) are Postgres enums: the type comes from
+  `Enums<'name'>`, the runtime list from `Constants.public.Enums.name`
+  (`z.enum(...)` in schemas). Display labels live in the feature that renders
+  them as `Record<Enums<'name'>, string>` (so TypeScript demands a label per
+  member), not in `lib/schemas/`.
 - Avoid `any` and type assertions; if you need one, the types upstream are
   usually wrong.
 
