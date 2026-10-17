@@ -12,7 +12,7 @@ Live site: https://brunch-planner.moravrav.workers.dev
 ## 2. Supabase hosted
 
 - Migrations to apply (9, all timestamped 20261017): `093947_profiles`, `093951_menus`, `093954_brunches`, `093958_responses`, `110248_reorder_items`, `112558_reorder_options`, `113512_add_ingredients_created_at`, `114028_optional_ingredient_name`, `114030_ingredient_unit_enum`. RLS policies are inside the migrations, as AGENTS.md requires.
-- Push: `npx supabase login`, `npx supabase link --project-ref acukzoboowdxsmtodqyp` (prompts for the DB password), `npm run supabase:db:push` (use `npx supabase db push --dry-run` first). The memory note says the repo is already linked, but the link state lives in the untracked `supabase/.temp` and still needs a login and DB password on this machine. The CLI is pinned at 2.121.0.
+- Push: `npx supabase login`, `npx supabase link --project-ref acukzoboowdxsmtodqyp` (prompts for the DB password), `npm run supabase:migration:up:remote` (check `npm run supabase:migration:list` first). The memory note says the repo is already linked, but the link state lives in the untracked `supabase/.temp` and still needs a login and DB password on this machine. The CLI is pinned at 2.121.0.
 - `supabase config push` is available (`npx supabase config --help` lists the `config` subcommand; verify with `npx supabase config push --help`). It would push the `config.toml` auth settings, but the current values are local-only, so edit them first or set them in the dashboard instead. Do not push as is:
   - `site_url = "http://127.0.0.1:3000"` and `additional_redirect_urls = ["https://127.0.0.1:3000"]`. Must become the Workers URL (Authentication > URL Configuration). Only matters for email links, since the code passes no `emailRedirectTo`.
   - `[auth.email] enable_confirmations = false`, so signup works instantly with no email. Hosted default is confirmations ON. Decide: turn off in dashboard (Authentication > Sign In / Providers > Email > Confirm email) for the fastest start, or keep on and handle the "check your email" flow (see `register-form.tsx`, which uses `data` from `signUp`).
@@ -39,7 +39,7 @@ Live site: https://brunch-planner.moravrav.workers.dev
 
 1. (Agent) Commit the pending invite work and push to the remote.
 2. (User) `npx supabase login`, then `npx supabase link --project-ref acukzoboowdxsmtodqyp` with the DB password.
-3. (User, or agent after approval) `npx supabase db push --dry-run`, then `npm run supabase:db:push`.
+3. (User, or agent after approval) `npm run supabase:migration:list`, then `npm run supabase:migration:up:remote`.
 4. (User) Supabase dashboard: copy the project URL and publishable key; decide on email confirm (off for fastest start).
 5. (User) `npm run build`, then `npx wrangler deploy`.
 6. (User) Supabase Authentication > URL Configuration: set Site URL to the Workers URL and add it to the redirect URLs.
