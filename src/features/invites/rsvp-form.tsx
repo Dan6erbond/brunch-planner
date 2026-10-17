@@ -57,7 +57,7 @@ export function RsvpForm({ invite, response }: RsvpFormProps) {
 
       <div className="grid gap-3">
         <h2 className="text-lg font-semibold">What would you like?</h2>
-        {invite.menus.items.map((item, index) => (
+        {invite.menu.items.map((item, index) => (
           <Card key={item.id}>
             <CardContent className="grid gap-4">
               <div className="flex items-center justify-between gap-3">

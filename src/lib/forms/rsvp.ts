@@ -9,7 +9,7 @@ export function rsvpDefaults(
   return {
     guestName: response?.guest_name ?? '',
     notes: response?.notes ?? '',
-    items: invite.menus.items.map((item) => {
+    items: invite.menu.items.map((item) => {
       const saved = response?.items.find((line) => line.item_id === item.id)
       return {
         itemId: item.id,

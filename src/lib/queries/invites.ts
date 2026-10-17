@@ -8,35 +8,16 @@ import { inviteSchema, savedResponseSchema } from '#/lib/schemas/invite'
 import { rsvpSchema, type RsvpInput } from '#/lib/schemas/rsvp'
 import { inviteKeys } from './keys'
 
-const MENU_ITEMS = 'menus.items'
-
 export const inviteQueries = {
   detail: (brunchId: string) =>
     queryOptions({
       queryKey: inviteKeys.detail(brunchId),
       queryFn: async () => {
-        const { data, error } = await supabase
-          .from('brunches_with_status')
-          .select(
-            '*, menus(name, description, items(id, name, description, option_groups(id, name, required, option_choices(id, name)), addons(id, name)))',
-          )
-          .eq('id', brunchId)
-          .order('position', { referencedTable: MENU_ITEMS })
-          .order('created_at', { referencedTable: MENU_ITEMS })
-          .order('position', { referencedTable: `${MENU_ITEMS}.option_groups` })
-          .order('position', {
-            referencedTable: `${MENU_ITEMS}.option_groups.option_choices`,
-          })
-          .order('position', { referencedTable: `${MENU_ITEMS}.addons` })
-          .maybeSingle()
+        const { data, error } = await supabase.rpc('get_invite', {
+          p_brunch_id: brunchId,
+        })
         if (error) throw error
-        if (!data) return null
-        const { data: hostName, error: hostError } = await supabase.rpc(
-          'get_brunch_host_name',
-          { p_brunch_id: brunchId },
-        )
-        if (hostError) throw hostError
-        return inviteSchema.parse({ ...data, host_name: hostName })
+        return inviteSchema.nullable().parse(data)
       },
     }),
   response: (responseId: string) =>

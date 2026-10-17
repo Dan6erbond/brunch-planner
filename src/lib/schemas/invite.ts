@@ -1,5 +1,4 @@
 import { z } from 'zod'
-import { brunchStatusSchema } from './brunch'
 import { itemSchema, menuSchema, nameSchema, optionGroupSchema } from './menu'
 
 const withId = { id: z.uuid() }
@@ -29,14 +28,16 @@ export const inviteSchema = z.object({
   starts_at: z.string().nullable(),
   invite_only: z.boolean(),
   host_name: z.string().nullable(),
-  status: brunchStatusSchema,
-  menus: menuSchema.extend({
+  cohost_names: z.array(z.string()),
+  status: z.enum(['open', 'closed']),
+  date_options: z.array(z.object({ ...withId, starts_at: z.string() })),
+  menu: menuSchema.extend({
     description: menuSchema.shape.description.nullable(),
     items: z.array(inviteItemSchema),
   }),
 })
 export type Invite = z.infer<typeof inviteSchema>
-export type InviteItem = Invite['menus']['items'][number]
+export type InviteItem = Invite['menu']['items'][number]
 
 export const savedResponseSchema = z.object({
   id: z.uuid(),

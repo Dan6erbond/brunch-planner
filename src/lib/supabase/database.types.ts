@@ -450,9 +450,6 @@ isOneToOne: false
 "addon_menu_id":
 { Args: { "p_addon_id": string }; Returns: string
                            },
-"brunch_is_sent":
-{ Args: { "p_brunch_id": string }; Returns: boolean
-                           },
 "can_edit_menu":
 { Args: { "p_menu_id": string }; Returns: boolean
                            },
@@ -471,11 +468,11 @@ isOneToOne: false
 "get_brunch_host_name":
 { Args: { "p_brunch_id": string }; Returns: string
                            },
+"get_invite":
+{ Args: { "p_brunch_id": string }; Returns: Json
+                           },
 "get_response":
 { Args: { "p_response_id": string }; Returns: Json
-                           },
-"item_is_published":
-{ Args: { "p_item_id": string }; Returns: boolean
                            },
 "item_menu_id":
 { Args: { "p_item_id": string }; Returns: string
@@ -490,9 +487,6 @@ isOneToOne: false
               "display_name": string,"email": string,"role": Database["public"]['Enums']["menu_collaborator_role"],"user_id": string
             }[]
                            },
-"menu_is_published":
-{ Args: { "p_menu_id": string }; Returns: boolean
-                           },
 "my_brunch_role":
 { Args: { "p_brunch_id": string }; Returns: string
                            },
@@ -501,9 +495,6 @@ isOneToOne: false
                            },
 "option_choice_menu_id":
 { Args: { "p_choice_id": string }; Returns: string
-                           },
-"option_group_is_published":
-{ Args: { "p_group_id": string }; Returns: boolean
                            },
 "option_group_menu_id":
 { Args: { "p_group_id": string }; Returns: string
