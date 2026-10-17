@@ -50,6 +50,7 @@ src/
   components/
     ui/                   # shadcn-generated primitives — regenerate via CLI, don't hand-edit beyond that
     layout/               # app shell, nav, invite-page shell — the one place hand-written layout lives
+    form/                 # reusable field/form components registered in the app form hook
   features/
     menus/                # menu + item + option/add-on/ingredient UI, co-located with its own small hooks
     brunches/             # brunch creation, date/time poll UI
@@ -64,19 +65,26 @@ src/
       menus.ts
       brunches.ts
       invites.ts
-    forms/                 # TanStack Form formOptions (see below)
-      menu.form.ts
-      brunch.form.ts
-      rsvp.form.ts
+    forms/                 # TanStack Form hook + formOptions (see below)
+      form-context.ts      # createFormHookContexts: useFieldContext / useFormContext
+      use-app-form.ts      # createFormHook: the app's `useAppForm`
+      menu.ts
+      brunch.ts
+      rsvp.ts
     schemas/               # Zod schemas, shared by forms + query/mutation input validation
-      menu.schema.ts
-      brunch.schema.ts
-      rsvp.schema.ts
+      menu.ts
+      brunch.ts
+      rsvp.ts
     utils/
 supabase/
   config.toml
   migrations/              # supabase CLI migrations, timestamped, one concern each
 ```
+
+Naming: files are named after the entity (`lib/forms/menu.ts`,
+`lib/schemas/menu.ts`) — the folder already says what kind of file it is, so no
+`.form` / `.schema` suffixes. Imports use the `#/` alias (`#/lib/forms/menu`),
+never relative `../..` paths across folders and never `@/`.
 
 Rule of thumb: **routes stay thin**. A route file wires a `loader` to a
 `queryOptions` call and renders a `features/*` component. Business/query/form
@@ -151,19 +159,26 @@ This is the whole payoff of the registry: one place defines the key shape,
 every invalidation call reuses it, nothing goes stale because a typo'd key
 drifted from the query.
 
-## TanStack Form: shared schemas + formOptions
+## TanStack Form: shared schemas + formOptions + app form hook
 
-Same split, mirrored:
+Same split, mirrored, plus a shared form hook following
+[form composition](https://tanstack.com/form/latest/docs/framework/react/guides/form-composition):
 
-- `lib/schemas/menu.schema.ts` — Zod schema, the single source of truth for
+- `lib/schemas/menu.ts` — Zod schema, the single source of truth for
   shape + validation. Reused for form validation AND to validate
   mutation input before it hits Supabase.
-- `lib/forms/menu.form.ts` — `formOptions()` built from that schema
-  (default values, Zod validator adapter), imported by whatever component
-  renders the form via `useForm(menuFormOptions)`.
+- `lib/forms/menu.ts` — `formOptions()` built from that schema
+  (default values, Zod validator), imported by whatever component renders the
+  form via `useAppForm({ ...menuFormOptions, onSubmit })`.
+- `lib/forms/form-context.ts` — `createFormHookContexts()`; exports
+  `useFieldContext` / `useFormContext` for field and form components.
+- `lib/forms/use-app-form.ts` — `createFormHook()`; the only place that
+  registers `fieldComponents` (`TextField`, `TextareaField`, ...) and
+  `formComponents` (`SubmitButton`). The components themselves live in
+  `components/form/`.
 
 ```ts
-// lib/schemas/menu.schema.ts
+// lib/schemas/menu.ts
 import { z } from 'zod'
 export const menuSchema = z.object({
   name: z.string().min(1),
@@ -173,9 +188,9 @@ export type MenuInput = z.infer<typeof menuSchema>
 ```
 
 ```ts
-// lib/forms/menu.form.ts
+// lib/forms/menu.ts
 import { formOptions } from '@tanstack/react-form'
-import { menuSchema, type MenuInput } from '#/lib/schemas/menu.schema'
+import { menuSchema, type MenuInput } from '#/lib/schemas/menu'
 
 export const menuFormOptions = formOptions<MenuInput>({
   defaultValues: { name: '', description: '' },
@@ -183,9 +198,31 @@ export const menuFormOptions = formOptions<MenuInput>({
 })
 ```
 
-Components call `useForm(menuFormOptions)` and submit into the matching
-mutation from `lib/queries/menus.ts`. No validation logic or default-value
-literals duplicated in the component.
+```tsx
+// in a component
+const form = useAppForm({ ...menuFormOptions, onSubmit })
+
+<form.AppField name="name">
+  {(field) => <field.TextField label="Name" />}
+</form.AppField>
+<form.AppForm>
+  <form.SubmitButton label="Save" pendingLabel="Saving…" />
+</form.AppForm>
+```
+
+Rules:
+
+- Always `useAppForm`, never bare `useForm`; always `form.AppField` +
+  `field.<Component>` and `form.AppForm` + `form.SubmitButton`.
+- Never write `Field` / `FieldLabel` / `FieldError` / `Input` markup inside a
+  feature component. A new reusable field (select, checkbox, radio group, date
+  picker) or form-level control goes into `components/form/` and gets
+  registered in `use-app-form.ts` — not an ad-hoc wrapper in a feature folder.
+- Field components read state through `useFieldContext<T>()`; they receive only
+  presentation props (`label`, `type`, `autoComplete`, ...).
+- No validation logic or default-value literals duplicated in the component.
+  Submit into the matching mutation from `lib/queries/` (use `mutateAsync` in
+  `onSubmit` so `SubmitButton` shows the pending state).
 
 ## Supabase: schema, RLS, migrations
 
@@ -218,6 +255,7 @@ same reusable command instead of retyping flags:
   "scripts": {
     "supabase:start": "supabase start",
     "supabase:stop": "supabase stop",
+    "supabase:status": "supabase status",
     "supabase:migration:new": "supabase migration new",
     "supabase:db:push": "supabase db push",
     "supabase:db:reset": "supabase db reset",
@@ -229,6 +267,18 @@ same reusable command instead of retyping flags:
 
 Usage: `npm run supabase:migration:new -- add_menus_table`,
 `npm run ui:add -- button dialog`.
+
+shadcn writes imports straight from the `components.json` aliases, so those
+must stay `#/...` (matching `tsconfig.json` `paths`). Don't add an `@/*` path
+alias or a `package.json` `imports` map: the former makes generated files use
+`@/`, the latter makes the CLI append `.tsx` to imports. Generated files come
+out double-quoted; run `npm run format` after `ui:add`.
+
+**Never call a bare `supabase` (or `shadcn`) binary.** The Supabase CLI is a
+devDependency pinned in `package.json`; a globally installed `supabase` may be
+an older version that rejects `config.toml` (e.g. `Invalid db.major_version:
+17`). Always go through `npm run supabase:*` (or `npx supabase` if no script
+exists yet — then add the script).
 
 ## Design direction (shadcn)
 
@@ -282,19 +332,19 @@ with `npm run supabase:types`.
 
 ## Local dev workflow
 
-Normal working session: `npm run supabase:start` (or `supabase start` if
-already running) + `npm run dev`, side by side. If a Supabase-dependent
+Normal working session: `npm run supabase:start` (safe to re-run if already
+running) + `npm run dev`, side by side. If a Supabase-dependent
 command fails to connect (migrations, `supabase:types`, the app's queries
 erroring on fetch) check whether the local stack is actually up
-(`supabase status`) before debugging further — don't assume the code is
+(`npm run supabase:status`) before debugging further — don't assume the code is
 broken. If it's down, tell the user to run `npm run supabase:start` rather
 than silently working around it.
 
 ## General guidance for agents working here
 
 - Prefer CLI generation over hand-written boilerplate: `tsr generate` for
-  routes, `shadcn add` for UI primitives, `supabase migration new` /
-  `supabase gen types` for schema. If a CLI can produce it, don't write it by
+  routes, `npm run ui:add` for UI primitives, `npm run supabase:migration:new` /
+  `npm run supabase:types` for schema. If a CLI can produce it, don't write it by
   hand.
 - Prefer `npm run <script>` over invoking `prettier`/`eslint`/`vite`/`supabase`
   directly — scripts in `package.json` are the contract; add a new script
