@@ -33,7 +33,8 @@ import {
   useReorderItems,
   useUpdateMenu,
 } from '#/lib/queries/menus'
-import { ConfirmDeleteDialog } from './confirm-delete-dialog'
+import { NoAccess } from '#/components/no-access'
+import { ConfirmDeleteDialog } from '#/components/confirm-delete-dialog'
 import { MenuItemEditSheet } from './menu-item-edit-sheet'
 import { MenuItemList } from './menu-item-list'
 import { NameDescriptionDialog } from './name-description-dialog'
@@ -63,13 +64,11 @@ export function MenuEditor({ menuId }: { menuId: string }) {
 
   if (!menu) {
     return (
-      <div className="grid justify-items-start gap-3">
-        <h1 className="text-2xl font-semibold">Menu not found</h1>
-        <Button variant="outline" render={<Link to="/menus" />}>
-          <ArrowLeftIcon />
-          Back to menus
-        </Button>
-      </div>
+      <NoAccess
+        title="No access or not found"
+        backTo="/menus"
+        backLabel="Back to menus"
+      />
     )
   }
 

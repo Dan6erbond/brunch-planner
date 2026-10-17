@@ -52,7 +52,8 @@ import {
   useUpdateBrunch,
 } from '#/lib/queries/brunches'
 import type { BrunchRow } from '#/lib/schemas/brunch'
-import { ConfirmDeleteDialog } from '#/features/menus/confirm-delete-dialog'
+import { NoAccess } from '#/components/no-access'
+import { ConfirmDeleteDialog } from '#/components/confirm-delete-dialog'
 import { BrunchFormDialog } from './brunch-form-dialog'
 import { formatStartsAt } from './brunch-format'
 import { BrunchStatusBadge } from './brunch-status-badge'
@@ -63,10 +64,11 @@ export function BrunchDetail({ brunchId }: { brunchId: string }) {
   const { data: brunch } = useSuspenseQuery(brunchQueries.detail(brunchId))
   if (!brunch) {
     return (
-      <div className="grid justify-items-start gap-3">
-        <p className="font-medium">Brunch not found</p>
-        <BackLink />
-      </div>
+      <NoAccess
+        title="No access or not found"
+        backTo="/brunches"
+        backLabel="All brunches"
+      />
     )
   }
   return <BrunchView brunch={brunch} />

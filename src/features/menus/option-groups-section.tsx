@@ -7,7 +7,7 @@ import {
 } from '#/lib/queries/menu-options'
 import { SortableList, SortableRow } from '#/components/sortable'
 import type { MenuItemDetail } from '#/lib/queries/menus'
-import { ConfirmDeleteDialog } from './confirm-delete-dialog'
+import { ConfirmDeleteDialog } from '#/components/confirm-delete-dialog'
 import { InlineAddField } from './inline-name-fields'
 import { OptionGroupCard } from './option-group-card'
 

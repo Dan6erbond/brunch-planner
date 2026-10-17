@@ -14,6 +14,12 @@ import { useFieldContext } from '#/lib/forms/form-context'
 
 const DEFAULT_HOUR = 10
 
+const startOfToday = () => {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  return today
+}
+
 const pad = (n: number) => String(n).padStart(2, '0')
 
 type DateTimeFieldProps = { label: string }
@@ -75,6 +81,7 @@ export function DateTimeField({ label }: DateTimeFieldProps) {
               selected={current}
               defaultMonth={current}
               onSelect={pickDate}
+              disabled={{ before: startOfToday() }}
             />
           </PopoverContent>
         </Popover>

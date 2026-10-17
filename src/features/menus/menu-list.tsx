@@ -13,7 +13,6 @@ import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
 import {
   Card,
-  CardAction,
   CardDescription,
   CardHeader,
   CardTitle,
@@ -35,7 +34,7 @@ import {
 import { useUserId } from '#/lib/queries/auth'
 import type { Tables } from '#/lib/supabase/database.types'
 import { menuRoleLabels } from './collaborator-roles'
-import { ConfirmDeleteDialog } from './confirm-delete-dialog'
+import { ConfirmDeleteDialog } from '#/components/confirm-delete-dialog'
 import { NameDescriptionDialog } from './name-description-dialog'
 
 type MenuRow = Tables<'menus'>
@@ -245,55 +244,52 @@ function MenuCard({
   onDelete: () => void
 }) {
   return (
-    <Card className="relative h-full transition-colors hover:bg-muted/40">
-      <CardHeader>
-        <CardTitle className="truncate pr-10">
-          <Link
-            to="/menus/$menuId"
-            params={{ menuId: menu.id }}
-            className="after:absolute after:inset-0 after:content-['']"
+    <div className="relative h-full">
+      <Card
+        render={<Link to="/menus/$menuId" params={{ menuId: menu.id }} />}
+        className="h-full transition-colors hover:bg-muted/40"
+      >
+        <CardHeader>
+          <CardTitle className="truncate pr-10">{menu.name}</CardTitle>
+          <CardDescription className="line-clamp-2">
+            {menu.description ?? 'No description'}
+          </CardDescription>
+          <p className="flex items-center gap-2 text-xs text-muted-foreground">
+            {itemCount} {itemCount === 1 ? 'dish' : 'dishes'}
+            {role !== 'owner' && (
+              <Badge variant="secondary">{menuRoleLabels[role]}</Badge>
+            )}
+          </p>
+        </CardHeader>
+      </Card>
+      <div className="absolute top-6 right-6">
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            render={<Button variant="ghost" size="icon-sm" />}
           >
-            {menu.name}
-          </Link>
-        </CardTitle>
-        <CardDescription className="line-clamp-2">
-          {menu.description ?? 'No description'}
-        </CardDescription>
-        <p className="flex items-center gap-2 text-xs text-muted-foreground">
-          {itemCount} {itemCount === 1 ? 'dish' : 'dishes'}
-          {role !== 'owner' && (
-            <Badge variant="secondary">{menuRoleLabels[role]}</Badge>
-          )}
-        </p>
-        <CardAction className="relative z-10">
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              render={<Button variant="ghost" size="icon-sm" />}
-            >
-              <MoreVerticalIcon />
-              <span className="sr-only">Menu actions</span>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {role !== 'viewer' && (
-                <DropdownMenuItem onClick={onRename}>
-                  <PencilIcon />
-                  Edit
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuItem onClick={onCopy}>
-                <CopyIcon />
-                {role === 'owner' ? 'Duplicate' : 'Copy to my menus'}
+            <MoreVerticalIcon />
+            <span className="sr-only">Menu actions</span>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {role !== 'viewer' && (
+              <DropdownMenuItem onClick={onRename}>
+                <PencilIcon />
+                Edit
               </DropdownMenuItem>
-              {role === 'owner' && (
-                <DropdownMenuItem variant="destructive" onClick={onDelete}>
-                  <Trash2Icon />
-                  Delete
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </CardAction>
-      </CardHeader>
-    </Card>
+            )}
+            <DropdownMenuItem onClick={onCopy}>
+              <CopyIcon />
+              {role === 'owner' ? 'Duplicate' : 'Copy to my menus'}
+            </DropdownMenuItem>
+            {role === 'owner' && (
+              <DropdownMenuItem variant="destructive" onClick={onDelete}>
+                <Trash2Icon />
+                Delete
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </div>
   )
 }
