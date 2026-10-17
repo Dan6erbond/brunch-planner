@@ -57,8 +57,7 @@ export function OptionGroupsSection({
               },
             )
           }}
-          layout="grid"
-          className="grid gap-3 @xl/sheet:grid-cols-2"
+          className="grid gap-3"
         >
           {item.option_groups.map((group) => (
             <SortableRow

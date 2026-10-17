@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom'
 import { useTheme } from 'next-themes'
 import { Toaster as Sonner, type ToasterProps } from 'sonner'
 import {
@@ -8,10 +9,11 @@ import {
   Loader2Icon,
 } from 'lucide-react'
 
+// #app is an isolated stacking context, so a toaster rendered inside it sits below body-level Base UI portals.
 const Toaster = ({ ...props }: ToasterProps) => {
   const { theme = 'system' } = useTheme()
 
-  return (
+  return createPortal(
     <Sonner
       theme={theme as ToasterProps['theme']}
       className="toaster group"
@@ -36,7 +38,8 @@ const Toaster = ({ ...props }: ToasterProps) => {
         },
       }}
       {...props}
-    />
+    />,
+    document.body,
   )
 }
 
