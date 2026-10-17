@@ -1,0 +1,54 @@
+# Supabase runs through the pinned CLI rather than a single service container because it is a multi-container stack.
+name: DB tests
+
+on:
+  pull_request:
+    paths: &paths
+      - supabase/**
+      - tests/**
+      - vitest.db.config.ts
+      - package*.json
+      - src/lib/supabase/**
+      - .github/workflows/db-tests.yml
+  push:
+    branches: [main]
+    paths: *paths
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: db-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  db-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci
+      - name: Start local Supabase
+        run: npm run supabase:start -- -x studio,mailpit,imgproxy,logflare,vector,edge-runtime,supavisor,realtime,storage-api
+      - name: Export connection settings
+        run: |
+          npm run --silent supabase:status -- -o env > status.env
+          {
+            echo "SUPABASE_URL=$(grep '^API_URL=' status.env | cut -d= -f2- | tr -d '"')"
+            echo "SUPABASE_ANON_KEY=$(grep '^ANON_KEY=' status.env | cut -d= -f2- | tr -d '"')"
+            echo "SUPABASE_SERVICE_ROLE_KEY=$(grep '^SERVICE_ROLE_KEY=' status.env | cut -d= -f2- | tr -d '"')"
+          } >> "$GITHUB_ENV"
+          rm status.env
+      - run: npm run test:db
+      - name: Check generated types are up to date
+        run: |
+          npm run supabase:types
+          git diff --exit-code src/lib/supabase/database.types.ts
+      - name: Stop Supabase
+        if: always()
+        run: npm run supabase:stop
