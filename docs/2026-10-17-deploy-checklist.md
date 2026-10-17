@@ -1,4 +1,6 @@
-# Deploy checklist: Netlify + hosted Supabase (acukzoboowdxsmtodqyp)
+# Deploy checklist: Cloudflare Pages + hosted Supabase (acukzoboowdxsmtodqyp)
+
+Update: hosting moved from Netlify to Cloudflare Pages (free, unlimited bandwidth). Cloudflare Pages has no build config file: set build command `npm run build` and output directory `dist` in the dashboard. The public `VITE_SUPABASE_*` values are committed in `.env.production` (Vite loads it for `vite build`), and `.node-version` pins Node 22. SPA fallback needs nothing: Pages serves `index.html` for unknown paths when there is no top-level `404.html`. Read the Netlify sections below with that in mind.
 
 ## 1. Netlify
 
