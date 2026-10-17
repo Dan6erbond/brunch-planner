@@ -1,3 +1,4 @@
+import { z } from 'zod'
 import {
   type InferDataFromTag,
   queryOptions,
@@ -9,6 +10,7 @@ import {
   brunchRowSchema,
   brunchSchema,
   type BrunchInput,
+  type SlotInput,
 } from '#/lib/schemas/brunch'
 import { brunchKeys } from './keys'
 
@@ -16,16 +18,71 @@ const SELECT = '*, menus(name)'
 
 const toNullable = (value: string) => (value === '' ? null : value)
 
+const toIso = (value: string) => new Date(value).toISOString()
+
 const toRow = (input: BrunchInput) => {
-  const { title, menuId, startsAt, location, description, inviteOnly } =
-    brunchSchema.parse(input)
+  const {
+    title,
+    menuId,
+    scheduling,
+    startsAt,
+    responsesCloseAt,
+    location,
+    description,
+    inviteOnly,
+  } = brunchSchema.parse(input)
   return {
     title,
     menu_id: menuId,
-    starts_at: new Date(startsAt).toISOString(),
+    scheduling,
+    starts_at: scheduling === 'fixed' ? toIso(startsAt) : null,
+    responses_close_at:
+      responsesCloseAt === '' ? null : toIso(responsesCloseAt),
     location: toNullable(location),
     description: toNullable(description),
     invite_only: inviteOnly,
+  }
+}
+
+const dateOptionSchema = z.object({ id: z.uuid(), starts_at: z.string() })
+
+async function syncSlots(brunchId: string, slots: SlotInput[]) {
+  const { data, error } = await supabase
+    .from('brunch_date_options')
+    .select('id, starts_at')
+    .eq('brunch_id', brunchId)
+  if (error) throw error
+  const existing = new Map(data.map((slot) => [slot.id, slot.starts_at]))
+  const kept = new Set(slots.map((slot) => slot.id))
+
+  const removed = [...existing.keys()].filter((id) => !kept.has(id))
+  if (removed.length > 0) {
+    const { error: deleteError } = await supabase
+      .from('brunch_date_options')
+      .delete()
+      .in('id', removed)
+    if (deleteError) throw deleteError
+  }
+
+  for (const slot of slots) {
+    const current = existing.get(slot.id)
+    if (current === undefined || toIso(current) === toIso(slot.startsAt))
+      continue
+    const { error: updateError } = await supabase
+      .from('brunch_date_options')
+      .update({ starts_at: toIso(slot.startsAt) })
+      .eq('id', slot.id)
+    if (updateError) throw updateError
+  }
+
+  const added = slots
+    .filter((slot) => !existing.has(slot.id))
+    .map((slot) => ({ brunch_id: brunchId, starts_at: toIso(slot.startsAt) }))
+  if (added.length > 0) {
+    const { error: insertError } = await supabase
+      .from('brunch_date_options')
+      .insert(added)
+    if (insertError) throw insertError
   }
 }
 
@@ -70,6 +127,24 @@ export const brunchQueries = {
         return data ? brunchRowSchema.parse(data) : null
       },
     }),
+  dateOptions: (id: string) =>
+    queryOptions({
+      queryKey: brunchKeys.dateOptions(id),
+      queryFn: async () => {
+        const { data, error } = await supabase
+          .from('brunch_date_options')
+          .select('id, starts_at')
+          .eq('brunch_id', id)
+        if (error) throw error
+        return z
+          .array(dateOptionSchema)
+          .parse(data)
+          .sort(
+            (a, b) =>
+              new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime(),
+          )
+      },
+    }),
   responses: (id: string) =>
     queryOptions({
       queryKey: brunchKeys.responses(id),
@@ -77,7 +152,7 @@ export const brunchQueries = {
         const { data, error } = await supabase
           .from('responses')
           .select(
-            'id, guest_name, notes, status, responded_at, created_at, response_items(id, item_id, quantity, response_item_choices(option_choice_id), response_item_addons(addon_id))',
+            'id, guest_name, notes, status, responded_at, created_at, response_items(id, item_id, quantity, response_item_choices(option_choice_id), response_item_addons(addon_id)), response_date_votes(date_option_id, availability)',
           )
           .eq('brunch_id', id)
           .order('created_at')
@@ -109,6 +184,7 @@ export function useCreateBrunch() {
         .select()
         .single()
       if (error) throw error
+      if (input.scheduling === 'poll') await syncSlots(data.id, input.slots)
       return data
     },
     onSuccess: () =>
@@ -116,19 +192,48 @@ export function useCreateBrunch() {
   })
 }
 
-// The menu can't change once invites are out: guests have already picked from it.
+// The menu can't change once invites are out: guests have already picked from
+// it. Likewise the fixed/poll mode, and the slots once a winner is picked.
 export function useUpdateBrunch(
   brunchId: string,
-  options: { lockMenu: boolean },
+  lock: { menu: boolean; scheduling: boolean; slots: boolean },
 ) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (input: BrunchInput) => {
-      const { menu_id, ...rest } = toRow(input)
+      const { menu_id, scheduling, starts_at, ...rest } = toRow(input)
       const { error } = await supabase
         .from('brunches')
-        .update(options.lockMenu ? rest : { menu_id, ...rest })
+        .update({
+          ...rest,
+          ...(lock.menu ? {} : { menu_id }),
+          ...(lock.scheduling
+            ? input.scheduling === 'fixed'
+              ? { starts_at }
+              : {}
+            : { scheduling, starts_at }),
+        })
         .eq('id', brunchId)
+      if (error) throw error
+      if (!lock.slots && !(lock.scheduling && input.scheduling === 'fixed'))
+        await syncSlots(
+          brunchId,
+          input.scheduling === 'poll' ? input.slots : [],
+        )
+    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: brunchKeys.all }),
+  })
+}
+
+export function usePickDateWinner(brunchId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (dateOptionId: string) => {
+      const { error } = await supabase.rpc('pick_date_winner', {
+        p_brunch_id: brunchId,
+        p_date_option_id: dateOptionId,
+      })
       if (error) throw error
     },
     onSuccess: () =>

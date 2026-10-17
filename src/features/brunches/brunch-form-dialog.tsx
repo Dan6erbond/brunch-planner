@@ -1,6 +1,8 @@
 import { Link } from '@tanstack/react-router'
 import { useSuspenseQuery } from '@tanstack/react-query'
+import { PlusIcon, XIcon } from 'lucide-react'
 import { toast } from 'sonner'
+import { Button } from '#/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -9,12 +11,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from '#/components/ui/dialog'
-import { FieldGroup } from '#/components/ui/field'
+import {
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldSet,
+} from '#/components/ui/field'
 import { brunchFormOptions } from '#/lib/forms/brunch'
 import { useAppForm } from '#/lib/forms/use-app-form'
 import { useUserId } from '#/lib/queries/auth'
 import { menuQueries } from '#/lib/queries/menus'
-import type { BrunchInput } from '#/lib/schemas/brunch'
+import type { BrunchInput, Scheduling } from '#/lib/schemas/brunch'
 
 type BrunchFormDialogProps = {
   open: boolean
@@ -24,8 +31,17 @@ type BrunchFormDialogProps = {
   submitLabel: string
   initialValues?: BrunchInput
   lockMenu?: boolean
+  lockScheduling?: boolean
+  lockSlots?: boolean
   onSubmit: (value: BrunchInput) => Promise<unknown>
 }
+
+const schedulingOptions: { value: Scheduling; label: string }[] = [
+  { value: 'fixed', label: 'Fixed date' },
+  { value: 'poll', label: 'Date poll (guests vote)' },
+]
+
+const blankSlot = { id: '', startsAt: '' }
 
 export function BrunchFormDialog({
   open,
@@ -52,6 +68,8 @@ function BrunchForm({
   submitLabel,
   initialValues,
   lockMenu,
+  lockScheduling,
+  lockSlots,
   onSubmit,
   onDone,
 }: Omit<BrunchFormDialogProps, 'open' | 'onOpenChange'> & {
@@ -112,8 +130,92 @@ function BrunchForm({
               )}
             </form.AppField>
           ))}
-        <form.AppField name="startsAt">
-          {(field) => <field.DateTimeField label="Date and time" />}
+        {!lockScheduling && (
+          <form.AppField
+            name="scheduling"
+            listeners={{
+              onChange: ({ value }) => {
+                if (
+                  value === 'poll' &&
+                  form.getFieldValue('slots').length === 0
+                )
+                  form.setFieldValue('slots', [blankSlot, blankSlot])
+              },
+            }}
+          >
+            {(field) => (
+              <field.RadioGroupField label="When" options={schedulingOptions} />
+            )}
+          </form.AppField>
+        )}
+        <form.Subscribe selector={(state) => state.values.scheduling}>
+          {(scheduling) =>
+            scheduling === 'fixed' ? (
+              <form.AppField name="startsAt">
+                {(field) => <field.DateTimeField label="Date and time" />}
+              </form.AppField>
+            ) : lockSlots ? (
+              <p className="text-sm text-muted-foreground">
+                A date has been picked, so the date options can�t change.
+              </p>
+            ) : (
+              <form.AppField name="slots" mode="array">
+                {(slotsField) => (
+                  <FieldSet>
+                    <FieldDescription>
+                      Date options. Guests vote yes or maybe on each. Removing
+                      an option deletes its votes.
+                    </FieldDescription>
+                    {slotsField.state.value.map((_, index) => (
+                      <div key={index} className="flex items-end gap-2">
+                        <div className="min-w-0 flex-1">
+                          <form.AppField name={`slots[${index}].startsAt`}>
+                            {(field) => (
+                              <field.DateTimeField
+                                label={`Option ${String(index + 1)}`}
+                              />
+                            )}
+                          </form.AppField>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            void slotsField.removeValue(index)
+                          }}
+                        >
+                          <XIcon />
+                          <span className="sr-only">
+                            Remove option {index + 1}
+                          </span>
+                        </Button>
+                      </div>
+                    ))}
+                    {slotsField.state.meta.isTouched && (
+                      <FieldError errors={slotsField.state.meta.errors} />
+                    )}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-fit"
+                      onClick={() => {
+                        slotsField.pushValue(blankSlot)
+                      }}
+                    >
+                      <PlusIcon />
+                      Add a date option
+                    </Button>
+                  </FieldSet>
+                )}
+              </form.AppField>
+            )
+          }
+        </form.Subscribe>
+        <form.AppField name="responsesCloseAt">
+          {(field) => (
+            <field.DateTimeField label="Close responses (optional)" clearable />
+          )}
         </form.AppField>
         <form.AppField name="location">
           {(field) => <field.TextField label="Location (optional)" />}

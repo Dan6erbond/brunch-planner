@@ -1,4 +1,5 @@
 import { createFormHook } from '@tanstack/react-form'
+import { AvailabilityField } from '#/components/form/availability-field'
 import { DateTimeField } from '#/components/form/date-time-field'
 import { CheckboxGroupField } from '#/components/form/checkbox-group-field'
 import { QuantityField } from '#/components/form/quantity-field'
@@ -22,6 +23,7 @@ export const { useAppForm, withFieldGroup } = createFormHook({
     RadioGroupField,
     CheckboxGroupField,
     QuantityField,
+    AvailabilityField,
   },
   formComponents: { SubmitButton },
 })

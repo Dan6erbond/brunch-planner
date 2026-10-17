@@ -8,6 +8,13 @@ export const responseStatusSchema = z.enum(
 )
 export type ResponseStatus = z.infer<typeof responseStatusSchema>
 
+// 'no' is a slot the guest can't make: it is simply not sent.
+export const availabilitySchema = z.enum([
+  ...Constants.public.Enums.date_availability,
+  'no',
+])
+export type Availability = z.infer<typeof availabilitySchema>
+
 const rsvpGroupSchema = z.object({
   groupId: z.string(),
   required: z.boolean(),
@@ -35,6 +42,11 @@ const rsvpItemSchema = z
     })
   })
 
+const dateVoteSchema = z.object({
+  dateOptionId: z.string(),
+  availability: availabilitySchema,
+})
+
 export const rsvpSchema = z.object({
   guestName: z
     .string()
@@ -47,6 +59,7 @@ export const rsvpSchema = z.object({
     .refine((items) => items.some((item) => item.quantity > 0), {
       message: 'Choose at least one item',
     }),
+  dateVotes: z.array(dateVoteSchema),
 })
 export const declineSchema = rsvpSchema.pick({ guestName: true, notes: true })
 export type RsvpInput = z.infer<typeof rsvpSchema>

@@ -4,6 +4,7 @@ import { useSuspenseQuery } from '@tanstack/react-query'
 import {
   ArrowLeftIcon,
   CalendarIcon,
+  ClockIcon,
   CopyIcon,
   LogOutIcon,
   MapPinIcon,
@@ -40,6 +41,7 @@ import {
   DropdownMenuTrigger,
 } from '#/components/ui/dropdown-menu'
 import { Input } from '#/components/ui/input'
+import { formatDayTime } from '#/lib/date'
 import { useUserId } from '#/lib/queries/auth'
 import {
   useBrunchRole,
@@ -51,9 +53,10 @@ import {
   useSendInvites,
   useUpdateBrunch,
 } from '#/lib/queries/brunches'
-import type { BrunchRow } from '#/lib/schemas/brunch'
+import { MIN_POLL_SLOTS, type BrunchRow } from '#/lib/schemas/brunch'
 import { NoAccess } from '#/components/no-access'
 import { ConfirmDeleteDialog } from '#/components/confirm-delete-dialog'
+import { DatePollCard } from './date-poll-card'
 import { BrunchFormDialog } from './brunch-form-dialog'
 import { formatStartsAt } from './brunch-format'
 import { BrunchStatusBadge } from './brunch-status-badge'
@@ -99,13 +102,24 @@ function BrunchView({ brunch }: { brunch: BrunchRow }) {
   const canManage = isOwner || role === 'co_host'
   const isDraft = brunch.status === 'draft'
   const lockMenu = !isDraft || !isOwner
-  const updateBrunch = useUpdateBrunch(brunch.id, { lockMenu })
+  const isPoll = brunch.scheduling === 'poll'
+  const pollFrozen = isPoll && brunch.starts_at !== null
+  const { data: dateOptions } = useSuspenseQuery(
+    brunchQueries.dateOptions(brunch.id),
+  )
+  const updateBrunch = useUpdateBrunch(brunch.id, {
+    menu: lockMenu,
+    scheduling: !isDraft,
+    slots: pollFrozen,
+  })
   const [sharing, setSharing] = useState(false)
   const [editing, setEditing] = useState(false)
   const [confirmingSend, setConfirmingSend] = useState(false)
   const [deleting, setDeleting] = useState(false)
 
-  const canSend = isDraft && brunch.starts_at !== null
+  const canSend =
+    isDraft &&
+    (isPoll ? dateOptions.length >= MIN_POLL_SLOTS : brunch.starts_at !== null)
   const inviteUrl = `${window.location.origin}/invites/${brunch.id}`
 
   return (
@@ -198,8 +212,17 @@ function BrunchView({ brunch }: { brunch: BrunchRow }) {
         <CardContent className="grid gap-3 text-sm">
           <p className="flex items-center gap-2">
             <CalendarIcon className="size-4 shrink-0 text-muted-foreground" />
-            {formatStartsAt(brunch.starts_at)}
+            {isPoll && brunch.starts_at === null
+              ? 'Date to be decided by poll'
+              : formatStartsAt(brunch.starts_at)}
           </p>
+          {brunch.responses_close_at && (
+            <p className="flex items-center gap-2">
+              <ClockIcon className="size-4 shrink-0 text-muted-foreground" />
+              {brunch.status === 'closed' ? 'Closed' : 'Closes'}{' '}
+              {formatDayTime(brunch.responses_close_at)}
+            </p>
+          )}
           {brunch.location && (
             <p className="flex items-center gap-2">
               <MapPinIcon className="size-4 shrink-0 text-muted-foreground" />
@@ -270,6 +293,15 @@ function BrunchView({ brunch }: { brunch: BrunchRow }) {
         </Card>
       )}
 
+      {isPoll && (
+        <DatePollCard
+          brunchId={brunch.id}
+          startsAt={brunch.starts_at}
+          isDraft={isDraft}
+          canManage={canManage}
+        />
+      )}
+
       <ResponsesSection
         brunchId={brunch.id}
         menuId={brunch.menu_id}
@@ -292,15 +324,23 @@ function BrunchView({ brunch }: { brunch: BrunchRow }) {
         title="Edit brunch"
         description={
           lockMenu
-            ? 'The menu is locked once invites are sent, and only the owner can change it.'
+            ? 'The menu and the fixed or poll choice are locked once invites are sent, and only the owner can change the menu.'
             : 'Change any detail while it’s still a draft.'
         }
         submitLabel="Save"
         lockMenu={lockMenu}
+        lockScheduling={!isDraft}
+        lockSlots={pollFrozen}
         initialValues={{
           title: brunch.title,
           menuId: brunch.menu_id,
+          scheduling: brunch.scheduling,
           startsAt: brunch.starts_at ?? '',
+          slots: dateOptions.map((option) => ({
+            id: option.id,
+            startsAt: option.starts_at,
+          })),
+          responsesCloseAt: brunch.responses_close_at ?? '',
           location: brunch.location ?? '',
           description: brunch.description ?? '',
           inviteOnly: brunch.invite_only,

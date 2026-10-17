@@ -14,6 +14,8 @@ export const brunchKeys = {
   list: (userId: string) => [...brunchKeys.lists(), userId] as const,
   detail: (id: string) => [...brunchKeys.all, 'detail', id] as const,
   responses: (id: string) => [...brunchKeys.detail(id), 'responses'] as const,
+  dateOptions: (id: string) =>
+    [...brunchKeys.detail(id), 'date-options'] as const,
   collaborators: (id: string) =>
     [...brunchKeys.detail(id), 'collaborators'] as const,
   role: (id: string) => [...brunchKeys.detail(id), 'role'] as const,

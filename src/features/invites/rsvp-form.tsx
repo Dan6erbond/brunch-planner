@@ -7,6 +7,7 @@ import { rsvpDefaults, rsvpFormOptions } from '#/lib/forms/rsvp'
 import { FieldGroup } from '#/components/ui/field'
 import { MAX_QUANTITY, declineSchema } from '#/lib/schemas/rsvp'
 import { toast } from 'sonner'
+import { formatDayTime } from '#/lib/date'
 import { useAppForm } from '#/lib/forms/use-app-form'
 import { useNavigate } from '@tanstack/react-router'
 import type { RsvpInput } from '#/lib/schemas/rsvp'
@@ -18,6 +19,7 @@ export function RsvpForm({ invite, response }: RsvpFormProps) {
   const navigate = useNavigate()
   const saveResponse = useSaveResponse(invite.id)
   const isDeclined = response?.status === 'declined'
+  const pollOpen = invite.scheduling === 'poll' && invite.starts_at === null
   const form = useAppForm({
     ...rsvpFormOptions(rsvpDefaults(invite, response)),
     onSubmit: ({ value }) => save(value, false),
@@ -29,6 +31,7 @@ export function RsvpForm({ invite, response }: RsvpFormProps) {
         responseId: response?.id ?? null,
         input: value,
         declined,
+        pollOpen,
       })
       await navigate({
         to: '/invites/$brunchId/$responseId',
@@ -78,6 +81,28 @@ export function RsvpForm({ invite, response }: RsvpFormProps) {
           )}
         </form.AppField>
       </FieldGroup>
+
+      {pollOpen && (
+        <div className="grid gap-3">
+          <h2 className="text-lg font-semibold">Which dates work?</h2>
+          <Card>
+            <CardContent className="grid gap-5">
+              {invite.date_options.map((option, index) => (
+                <form.AppField
+                  key={option.id}
+                  name={`dateVotes[${index}].availability`}
+                >
+                  {(field) => (
+                    <field.AvailabilityField
+                      label={formatDayTime(option.starts_at)}
+                    />
+                  )}
+                </form.AppField>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       <div className="grid gap-3">
         <h2 className="text-lg font-semibold">What would you like?</h2>

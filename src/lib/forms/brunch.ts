@@ -4,7 +4,10 @@ import { brunchSchema, type BrunchInput } from '#/lib/schemas/brunch'
 const brunchDefaults: BrunchInput = {
   title: '',
   menuId: '',
+  scheduling: 'fixed',
   startsAt: '',
+  slots: [],
+  responsesCloseAt: '',
   location: '',
   description: '',
   inviteOnly: false,

@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { Constants } from '#/lib/supabase/database.types'
 import { responseStatusSchema } from './rsvp'
 import { itemSchema, menuSchema, nameSchema, optionGroupSchema } from './menu'
 
@@ -54,6 +55,12 @@ export const savedResponseSchema = z.object({
   guest_name: z.string(),
   notes: z.string().nullable(),
   status: responseStatusSchema.nullable(),
+  date_votes: z.array(
+    z.object({
+      date_option_id: z.uuid(),
+      availability: z.enum(Constants.public.Enums.date_availability),
+    }),
+  ),
   items: z.array(
     z.object({
       item_id: z.uuid(),

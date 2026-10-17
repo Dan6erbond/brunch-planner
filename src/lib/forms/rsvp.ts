@@ -9,6 +9,12 @@ export function rsvpDefaults(
   return {
     guestName: response?.guest_name ?? '',
     notes: response?.notes ?? '',
+    dateVotes: invite.date_options.map((option) => ({
+      dateOptionId: option.id,
+      availability:
+        response?.date_votes.find((vote) => vote.date_option_id === option.id)
+          ?.availability ?? 'no',
+    })),
     items: invite.menu.items.map((item) => {
       const saved = response?.items.find((line) => line.item_id === item.id)
       return {

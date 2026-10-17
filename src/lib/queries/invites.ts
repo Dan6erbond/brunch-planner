@@ -47,7 +47,7 @@ export const inviteQueries = {
     }),
 }
 
-const toPayload = (input: RsvpInput, declined: boolean) => {
+const toPayload = (input: RsvpInput, declined: boolean, pollOpen: boolean) => {
   if (declined) {
     const { guestName, notes } = declineSchema.parse(input)
     return {
@@ -57,7 +57,7 @@ const toPayload = (input: RsvpInput, declined: boolean) => {
       items: [],
     }
   }
-  const { guestName, notes, items } = rsvpSchema.parse(input)
+  const { guestName, notes, items, dateVotes } = rsvpSchema.parse(input)
   return {
     guest_name: guestName,
     notes: notes === '' ? null : notes,
@@ -72,6 +72,18 @@ const toPayload = (input: RsvpInput, declined: boolean) => {
         ),
         addon_ids: item.addonIds,
       })),
+    date_votes: pollOpen
+      ? dateVotes.flatMap((vote) =>
+          vote.availability === 'no'
+            ? []
+            : [
+                {
+                  date_option_id: vote.dateOptionId,
+                  availability: vote.availability,
+                },
+              ],
+        )
+      : [],
   }
 }
 
@@ -82,16 +94,18 @@ export function useSaveResponse(brunchId: string) {
       responseId,
       input,
       declined = false,
+      pollOpen,
     }: {
       responseId: string | null
       input: RsvpInput
       declined?: boolean
+      pollOpen: boolean
     }) => {
       const { data, error } = await supabase.rpc('save_response', {
         p_brunch_id: brunchId,
         // The generated arg type is non-null, but null means "create".
         p_response_id: responseId ?? undefined,
-        p_payload: toPayload(input, declined),
+        p_payload: toPayload(input, declined, pollOpen),
       })
       if (error) throw error
       return data

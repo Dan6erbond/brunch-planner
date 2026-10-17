@@ -511,6 +511,9 @@ isOneToOne: false
 "owns_menu":
 { Args: { "p_menu_id": string }; Returns: boolean
                            },
+"pick_date_winner":
+{ Args: { "p_brunch_id": string,"p_date_option_id": string }; Returns: undefined
+                           },
 "reorder_addons":
 { Args: { "p_addon_ids": (string)[],"p_item_id": string }; Returns: undefined
                            },

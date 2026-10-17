@@ -1,5 +1,5 @@
 import { useId } from 'react'
-import { CalendarIcon } from 'lucide-react'
+import { CalendarIcon, XIcon } from 'lucide-react'
 import { Button } from '#/components/ui/button'
 import { Calendar } from '#/components/ui/calendar'
 import { Field, FieldError, FieldLabel } from '#/components/ui/field'
@@ -22,9 +22,12 @@ const startOfToday = () => {
 
 const pad = (n: number) => String(n).padStart(2, '0')
 
-type DateTimeFieldProps = { label: string }
+type DateTimeFieldProps = {
+  label: string
+  clearable?: boolean
+}
 
-export function DateTimeField({ label }: DateTimeFieldProps) {
+export function DateTimeField({ label, clearable }: DateTimeFieldProps) {
   const field = useFieldContext<string>()
   const id = useId()
   const invalid = field.state.meta.isTouched && !field.state.meta.isValid
@@ -95,6 +98,19 @@ export function DateTimeField({ label }: DateTimeFieldProps) {
             pickTime(event.target.value)
           }}
         />
+        {clearable && current && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => {
+              field.handleChange('')
+            }}
+          >
+            <XIcon />
+            <span className="sr-only">Clear {label}</span>
+          </Button>
+        )}
       </div>
       {invalid && <FieldError errors={field.state.meta.errors} />}
     </Field>
