@@ -43,6 +43,38 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"brunch_collaborators": {
+                  Row: {
+                    "brunch_id": string,"created_at": string,"role": Database["public"]['Enums']["brunch_collaborator_role"],"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "brunch_id": string,"created_at"?: string,"role": Database["public"]['Enums']["brunch_collaborator_role"],"user_id": string
+                  }
+                  Update: {
+                    "brunch_id"?: string,"created_at"?: string,"role"?: Database["public"]['Enums']["brunch_collaborator_role"],"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "brunch_collaborators_brunch_id_fkey"
+      columns: ["brunch_id"]
+isOneToOne: false
+      referencedRelation: "brunches"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "brunch_collaborators_brunch_id_fkey"
+      columns: ["brunch_id"]
+isOneToOne: false
+      referencedRelation: "brunches_with_status"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "brunch_collaborators_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"brunch_date_options": {
                   Row: {
                     "brunch_id": string,"id": string,"starts_at": string
@@ -144,6 +176,32 @@ isOneToOne: false
       columns: ["menu_id"]
 isOneToOne: false
       referencedRelation: "menus"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"menu_collaborators": {
+                  Row: {
+                    "created_at": string,"menu_id": string,"role": Database["public"]['Enums']["menu_collaborator_role"],"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"menu_id": string,"role": Database["public"]['Enums']["menu_collaborator_role"],"user_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"menu_id"?: string,"role"?: Database["public"]['Enums']["menu_collaborator_role"],"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "menu_collaborators_menu_id_fkey"
+      columns: ["menu_id"]
+isOneToOne: false
+      referencedRelation: "menus"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "menu_collaborators_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
       referencedColumns: ["id"]
     }
                   ]
@@ -383,8 +441,32 @@ isOneToOne: false
                 }
           }
           Functions: {
-            "brunch_is_sent":
+            "add_brunch_collaborator":
+{ Args: { "p_brunch_id": string,"p_email": string,"p_role": Database["public"]['Enums']["brunch_collaborator_role"] }; Returns: undefined
+                           },
+"add_menu_collaborator":
+{ Args: { "p_email": string,"p_menu_id": string,"p_role": Database["public"]['Enums']["menu_collaborator_role"] }; Returns: undefined
+                           },
+"addon_menu_id":
+{ Args: { "p_addon_id": string }; Returns: string
+                           },
+"brunch_is_sent":
 { Args: { "p_brunch_id": string }; Returns: boolean
+                           },
+"can_edit_menu":
+{ Args: { "p_menu_id": string }; Returns: boolean
+                           },
+"can_manage_brunch":
+{ Args: { "p_brunch_id": string }; Returns: boolean
+                           },
+"can_read_brunch":
+{ Args: { "p_brunch_id": string }; Returns: boolean
+                           },
+"can_read_menu":
+{ Args: { "p_menu_id": string }; Returns: boolean
+                           },
+"get_brunch_cohost_names":
+{ Args: { "p_brunch_id": string }; Returns: (string)[]
                            },
 "get_brunch_host_name":
 { Args: { "p_brunch_id": string }; Returns: string
@@ -395,35 +477,42 @@ isOneToOne: false
 "item_is_published":
 { Args: { "p_item_id": string }; Returns: boolean
                            },
+"item_menu_id":
+{ Args: { "p_item_id": string }; Returns: string
+                           },
+"list_brunch_collaborators":
+{ Args: { "p_brunch_id": string }; Returns: {
+              "display_name": string,"email": string,"role": Database["public"]['Enums']["brunch_collaborator_role"],"user_id": string
+            }[]
+                           },
+"list_menu_collaborators":
+{ Args: { "p_menu_id": string }; Returns: {
+              "display_name": string,"email": string,"role": Database["public"]['Enums']["menu_collaborator_role"],"user_id": string
+            }[]
+                           },
 "menu_is_published":
 { Args: { "p_menu_id": string }; Returns: boolean
+                           },
+"my_brunch_role":
+{ Args: { "p_brunch_id": string }; Returns: string
+                           },
+"my_menu_role":
+{ Args: { "p_menu_id": string }; Returns: string
+                           },
+"option_choice_menu_id":
+{ Args: { "p_choice_id": string }; Returns: string
                            },
 "option_group_is_published":
 { Args: { "p_group_id": string }; Returns: boolean
                            },
-"owns_addon":
-{ Args: { "p_addon_id": string }; Returns: boolean
+"option_group_menu_id":
+{ Args: { "p_group_id": string }; Returns: string
                            },
 "owns_brunch":
 { Args: { "p_brunch_id": string }; Returns: boolean
                            },
-"owns_item":
-{ Args: { "p_item_id": string }; Returns: boolean
-                           },
 "owns_menu":
 { Args: { "p_menu_id": string }; Returns: boolean
-                           },
-"owns_option_choice":
-{ Args: { "p_choice_id": string }; Returns: boolean
-                           },
-"owns_option_group":
-{ Args: { "p_group_id": string }; Returns: boolean
-                           },
-"owns_response":
-{ Args: { "p_response_id": string }; Returns: boolean
-                           },
-"owns_response_item":
-{ Args: { "p_response_item_id": string }; Returns: boolean
                            },
 "reorder_addons":
 { Args: { "p_addon_ids": (string)[],"p_item_id": string }; Returns: undefined
@@ -437,12 +526,18 @@ isOneToOne: false
 "reorder_option_groups":
 { Args: { "p_group_ids": (string)[],"p_item_id": string }; Returns: undefined
                            },
+"response_brunch_id":
+{ Args: { "p_response_id": string }; Returns: string
+                           },
+"response_item_brunch_id":
+{ Args: { "p_response_item_id": string }; Returns: string
+                           },
 "save_response":
 { Args: { "p_brunch_id": string,"p_payload": Json,"p_response_id"?: string }; Returns: string
                            }
           }
           Enums: {
-            "brunch_scheduling": "fixed"|"poll","date_availability": "yes"|"maybe","ingredient_unit": "g"|"kg"|"ml"|"l"|"tsp"|"tbsp"|"cup"|"piece"
+            "brunch_collaborator_role": "viewer"|"co_host","brunch_scheduling": "fixed"|"poll","date_availability": "yes"|"maybe","ingredient_unit": "g"|"kg"|"ml"|"l"|"tsp"|"tbsp"|"cup"|"piece","menu_collaborator_role": "viewer"|"editor"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -562,7 +657,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "brunch_scheduling": ["fixed", "poll"],"date_availability": ["yes", "maybe"],"ingredient_unit": ["g", "kg", "ml", "l", "tsp", "tbsp", "cup", "piece"]
+            "brunch_collaborator_role": ["viewer", "co_host"],"brunch_scheduling": ["fixed", "poll"],"date_availability": ["yes", "maybe"],"ingredient_unit": ["g", "kg", "ml", "l", "tsp", "tbsp", "cup", "piece"],"menu_collaborator_role": ["viewer", "editor"]
           }
         }
 } as const
