@@ -9,16 +9,10 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '#/components/ui/popover'
+import { formatDay } from '#/lib/date'
 import { useFieldContext } from '#/lib/forms/form-context'
 
 const DEFAULT_HOUR = 10
-
-const dateFormat = new Intl.DateTimeFormat(undefined, {
-  weekday: 'short',
-  month: 'short',
-  day: 'numeric',
-  year: 'numeric',
-})
 
 const pad = (n: number) => String(n).padStart(2, '0')
 
@@ -72,7 +66,7 @@ export function DateTimeField({ label }: DateTimeFieldProps) {
           >
             <CalendarIcon />
             <span className="truncate">
-              {current ? dateFormat.format(current) : 'Pick a date'}
+              {current ? formatDay(current) : 'Pick a date'}
             </span>
           </PopoverTrigger>
           <PopoverContent align="start" className="w-auto p-0">

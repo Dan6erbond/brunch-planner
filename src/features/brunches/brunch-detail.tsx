@@ -42,6 +42,7 @@ import { ConfirmDeleteDialog } from '#/features/menus/confirm-delete-dialog'
 import { BrunchFormDialog } from './brunch-form-dialog'
 import { formatStartsAt } from './brunch-format'
 import { BrunchStatusBadge } from './brunch-status-badge'
+import { ResponsesSection } from './responses-section'
 
 export function BrunchDetail({ brunchId }: { brunchId: string }) {
   const { data: brunch } = useSuspenseQuery(brunchQueries.detail(brunchId))
@@ -193,6 +194,12 @@ function BrunchView({ brunch }: { brunch: BrunchRow }) {
           </CardContent>
         </Card>
       )}
+
+      <ResponsesSection
+        brunchId={brunch.id}
+        menuId={brunch.menu_id}
+        isDraft={isDraft}
+      />
 
       <BrunchFormDialog
         open={editing}

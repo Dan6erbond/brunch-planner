@@ -8,6 +8,7 @@ export const brunchKeys = {
   all: ['brunches'] as const,
   list: () => [...brunchKeys.all, 'list'] as const,
   detail: (id: string) => [...brunchKeys.all, 'detail', id] as const,
+  responses: (id: string) => [...brunchKeys.detail(id), 'responses'] as const,
 }
 
 export const inviteKeys = {

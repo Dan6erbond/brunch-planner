@@ -1,4 +1,5 @@
 import {
+  type InferDataFromTag,
   queryOptions,
   useMutation,
   useQueryClient,
@@ -55,7 +56,29 @@ export const brunchQueries = {
         return data ? brunchRowSchema.parse(data) : null
       },
     }),
+  responses: (id: string) =>
+    queryOptions({
+      queryKey: brunchKeys.responses(id),
+      queryFn: async () => {
+        const { data, error } = await supabase
+          .from('responses')
+          .select(
+            'id, guest_name, notes, responded_at, created_at, response_items(id, item_id, quantity, response_item_choices(option_choice_id), response_item_addons(addon_id))',
+          )
+          .eq('brunch_id', id)
+          .order('created_at')
+        if (error) throw error
+        return data
+      },
+    }),
 }
+
+export type BrunchResponse = NonNullable<
+  InferDataFromTag<
+    unknown,
+    ReturnType<typeof brunchQueries.responses>['queryKey']
+  >
+>[number]
 
 export function useCreateBrunch() {
   const queryClient = useQueryClient()

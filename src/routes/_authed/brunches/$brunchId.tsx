@@ -7,10 +7,16 @@ import { menuQueries } from '#/lib/queries/menus'
 
 export const Route = createFileRoute('/_authed/brunches/$brunchId')({
   loader: async ({ context, params }) => {
-    await Promise.all([
+    const [brunch] = await Promise.all([
       context.queryClient.query(brunchQueries.detail(params.brunchId)),
       context.queryClient.query(menuQueries.list()),
     ])
+    if (brunch && brunch.status !== 'draft') {
+      await Promise.all([
+        context.queryClient.query(brunchQueries.responses(brunch.id)),
+        context.queryClient.query(menuQueries.detail(brunch.menu_id)),
+      ])
+    }
   },
   pendingComponent: BrunchDetailPending,
   errorComponent: MenusError,
