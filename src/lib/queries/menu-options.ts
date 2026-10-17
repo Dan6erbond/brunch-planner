@@ -3,11 +3,17 @@ import { supabase } from '#/lib/supabase/client'
 import {
   nameSchema,
   optionGroupSchema,
+  reorderAddonsSchema,
+  reorderOptionChoicesSchema,
+  reorderOptionGroupsSchema,
   type NameInput,
   type OptionGroupInput,
+  type ReorderAddonsInput,
+  type ReorderOptionChoicesInput,
+  type ReorderOptionGroupsInput,
 } from '#/lib/schemas/menu'
 import { menuKeys } from './keys'
-import { menuQueries } from './menus'
+import { menuQueries, type MenuItemDetail } from './menus'
 
 const maxPosition = (rows: { position: number }[] | undefined) =>
   rows?.reduce((max, row) => Math.max(max, row.position), -1) ?? -1
@@ -154,4 +160,101 @@ export function useDeleteAddon(menuId: string) {
     const { error } = await supabase.from('addons').delete().eq('id', addonId)
     if (error) throw error
   })
+}
+
+const reorderBy = <T extends { id: string }>(rows: T[], ids: string[]) => {
+  const byId = new Map(rows.map((row) => [row.id, row]))
+  return ids.flatMap((id) => byId.get(id) ?? [])
+}
+
+function useReorderMutation<TInput extends { itemId: string }>(
+  menuId: string,
+  mutationFn: (input: TInput) => Promise<void>,
+  patchItem: (item: MenuItemDetail, input: TInput) => MenuItemDetail,
+) {
+  const queryClient = useQueryClient()
+  const queryKey = menuQueries.detail(menuId).queryKey
+  return useMutation({
+    mutationFn,
+    onMutate: async (input) => {
+      await queryClient.cancelQueries({ queryKey })
+      const previous = queryClient.getQueryData(queryKey)
+      queryClient.setQueryData(
+        queryKey,
+        (menu) =>
+          menu && {
+            ...menu,
+            items: menu.items.map((item) =>
+              item.id === input.itemId ? patchItem(item, input) : item,
+            ),
+          },
+      )
+      return { previous }
+    },
+    onError: (_error, _input, context) => {
+      queryClient.setQueryData(queryKey, context?.previous)
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey }),
+  })
+}
+
+export function useReorderOptionGroups(menuId: string) {
+  return useReorderMutation(
+    menuId,
+    async (input: ReorderOptionGroupsInput) => {
+      const { itemId, groupIds } = reorderOptionGroupsSchema.parse(input)
+      const { error } = await supabase.rpc('reorder_option_groups', {
+        p_item_id: itemId,
+        p_group_ids: groupIds,
+      })
+      if (error) throw error
+    },
+    (item, { groupIds }) => ({
+      ...item,
+      option_groups: reorderBy(item.option_groups, groupIds),
+    }),
+  )
+}
+
+export function useReorderOptionChoices(menuId: string) {
+  return useReorderMutation(
+    menuId,
+    async (input: ReorderOptionChoicesInput) => {
+      const { groupId, choiceIds } = reorderOptionChoicesSchema.parse(input)
+      const { error } = await supabase.rpc('reorder_option_choices', {
+        p_group_id: groupId,
+        p_choice_ids: choiceIds,
+      })
+      if (error) throw error
+    },
+    (item, { groupId, choiceIds }) => ({
+      ...item,
+      option_groups: item.option_groups.map((group) =>
+        group.id === groupId
+          ? {
+              ...group,
+              option_choices: reorderBy(group.option_choices, choiceIds),
+            }
+          : group,
+      ),
+    }),
+  )
+}
+
+export function useReorderAddons(menuId: string) {
+  return useReorderMutation(
+    menuId,
+    async (input: ReorderAddonsInput) => {
+      const { itemId, addonIds } = reorderAddonsSchema.parse(input)
+      const { error } = await supabase.rpc('reorder_addons', {
+        p_item_id: itemId,
+        p_addon_ids: addonIds,
+      })
+      if (error) throw error
+    },
+    (item, { addonIds }) => ({
+      ...item,
+      addons: reorderBy(item.addons, addonIds),
+    }),
+  )
 }

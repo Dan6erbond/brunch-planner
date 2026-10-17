@@ -15,6 +15,8 @@ import { useAppForm } from '#/lib/forms/use-app-form'
 import { menuQueries, useCreateItem, useUpdateItem } from '#/lib/queries/menus'
 import type { Tables } from '#/lib/supabase/database.types'
 import { AddonsSection } from './addons-section'
+import { IngredientList } from './ingredient-list'
+import { NameDescriptionFields } from './name-description-fields'
 import { OptionGroupsSection } from './option-groups-section'
 
 const FORM_ID = 'menu-item-form'
@@ -94,32 +96,36 @@ function MenuItemForm({
           <form
             id={FORM_ID}
             noValidate
-            className="grid gap-6 @xl/sheet:grid-cols-2"
             onSubmit={(event) => {
               event.preventDefault()
               void form.handleSubmit()
             }}
           >
-            <FieldGroup>
-              <form.AppField name="name">
-                {(field) => <field.TextField label="Name" autoFocus />}
-              </form.AppField>
-            </FieldGroup>
-            <FieldGroup>
-              <form.AppField name="description">
-                {(field) => (
-                  <field.TextareaField
-                    label="Description (optional)"
-                    rows={4}
-                  />
-                )}
-              </form.AppField>
+            <FieldGroup className="@xl/sheet:grid @xl/sheet:grid-cols-2">
+              <NameDescriptionFields
+                form={form}
+                fields={{ name: 'name', description: 'description' }}
+                descriptionRows={4}
+              />
             </FieldGroup>
           </form>
           {savedItem ? (
             <>
               <OptionGroupsSection menuId={menuId} item={savedItem} />
               <AddonsSection menuId={menuId} item={savedItem} />
+              <section className="grid gap-3">
+                <div>
+                  <h3 className="font-medium">Ingredients</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Used for the shopping list. Quantities are per portion.
+                  </p>
+                </div>
+                <IngredientList
+                  menuId={menuId}
+                  parent={{ kind: 'item', id: savedItem.id }}
+                  ingredients={savedItem.ingredients}
+                />
+              </section>
             </>
           ) : (
             <p className="rounded-3xl border border-dashed p-4 text-sm text-muted-foreground">

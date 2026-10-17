@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Trash2Icon } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '#/components/ui/button'
@@ -12,6 +13,8 @@ type InlineNameFieldProps = {
   label: string
   onSave: (name: string) => Promise<unknown>
   onDelete: () => void
+  handle?: ReactNode
+  actions?: ReactNode
 }
 
 export function InlineNameField({
@@ -19,6 +22,8 @@ export function InlineNameField({
   label,
   onSave,
   onDelete,
+  handle,
+  actions,
 }: InlineNameFieldProps) {
   const form = useAppForm({
     ...nameFormOptions,
@@ -45,6 +50,7 @@ export function InlineNameField({
         void form.handleSubmit()
       }}
     >
+      {handle}
       <div className="min-w-0 flex-1">
         <form.AppField name="name">
           {(field) => (
@@ -59,6 +65,7 @@ export function InlineNameField({
           )}
         </form.AppField>
       </div>
+      {actions}
       <Button
         type="button"
         variant="ghost"

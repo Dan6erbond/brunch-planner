@@ -3,7 +3,9 @@ import { toast } from 'sonner'
 import {
   useCreateOptionGroup,
   useDeleteOptionGroup,
+  useReorderOptionGroups,
 } from '#/lib/queries/menu-options'
+import { SortableList, SortableRow } from '#/components/sortable'
 import type { MenuItemDetail } from '#/lib/queries/menus'
 import { ConfirmDeleteDialog } from './confirm-delete-dialog'
 import { InlineAddField } from './inline-name-fields'
@@ -19,6 +21,7 @@ export function OptionGroupsSection({
 }: OptionGroupsSectionProps) {
   const createGroup = useCreateOptionGroup(menuId)
   const deleteGroup = useDeleteOptionGroup(menuId)
+  const reorderGroups = useReorderOptionGroups(menuId)
   const [deleting, setDeleting] = useState<OptionGroup | null>(null)
 
   const removeGroup = (group: OptionGroup) => {
@@ -42,18 +45,40 @@ export function OptionGroupsSection({
         </p>
       </div>
       {item.option_groups.length > 0 && (
-        <ul className="grid gap-3 @xl/sheet:grid-cols-2">
+        <SortableList
+          ids={item.option_groups.map((group) => group.id)}
+          onReorder={(groupIds) => {
+            reorderGroups.mutate(
+              { itemId: item.id, groupIds },
+              {
+                onError: (error) => {
+                  toast.error(error.message)
+                },
+              },
+            )
+          }}
+          layout="grid"
+          className="grid gap-3 @xl/sheet:grid-cols-2"
+        >
           {item.option_groups.map((group) => (
-            <li key={group.id}>
-              <OptionGroupCard
-                menuId={menuId}
-                itemId={item.id}
-                group={group}
-                onDelete={removeGroup}
-              />
-            </li>
+            <SortableRow
+              key={group.id}
+              id={group.id}
+              handleLabel={`Reorder ${group.name}`}
+              className="rounded-3xl"
+            >
+              {(handle) => (
+                <OptionGroupCard
+                  menuId={menuId}
+                  itemId={item.id}
+                  group={group}
+                  handle={handle}
+                  onDelete={removeGroup}
+                />
+              )}
+            </SortableRow>
           ))}
-        </ul>
+        </SortableList>
       )}
       <InlineAddField
         label="New option group name"

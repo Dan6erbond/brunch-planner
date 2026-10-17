@@ -11,6 +11,7 @@ import { FieldGroup } from '#/components/ui/field'
 import { menuFormOptions } from '#/lib/forms/menu'
 import { useAppForm } from '#/lib/forms/use-app-form'
 import type { MenuInput } from '#/lib/schemas/menu'
+import { NameDescriptionFields } from './name-description-fields'
 
 type NameDescriptionDialogProps = {
   open: boolean
@@ -78,14 +79,11 @@ function NameDescriptionForm({
         <DialogDescription>{description}</DialogDescription>
       </DialogHeader>
       <FieldGroup>
-        <form.AppField name="name">
-          {(field) => <field.TextField label="Name" autoFocus />}
-        </form.AppField>
-        <form.AppField name="description">
-          {(field) => (
-            <field.TextareaField label="Description (optional)" rows={3} />
-          )}
-        </form.AppField>
+        <NameDescriptionFields
+          form={form}
+          fields={{ name: 'name', description: 'description' }}
+          descriptionRows={3}
+        />
       </FieldGroup>
       <DialogFooter>
         <form.AppForm>

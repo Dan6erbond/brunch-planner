@@ -24,3 +24,26 @@ export const reorderItemsSchema = z.object({
   itemIds: z.array(z.uuid()).min(1),
 })
 export type ReorderItemsInput = z.infer<typeof reorderItemsSchema>
+
+const idsSchema = z.array(z.uuid()).min(1)
+
+export const reorderOptionGroupsSchema = z.object({
+  itemId: z.uuid(),
+  groupIds: idsSchema,
+})
+export type ReorderOptionGroupsInput = z.infer<typeof reorderOptionGroupsSchema>
+
+export const reorderOptionChoicesSchema = z.object({
+  itemId: z.uuid(),
+  groupId: z.uuid(),
+  choiceIds: idsSchema,
+})
+export type ReorderOptionChoicesInput = z.infer<
+  typeof reorderOptionChoicesSchema
+>
+
+export const reorderAddonsSchema = z.object({
+  itemId: z.uuid(),
+  addonIds: idsSchema,
+})
+export type ReorderAddonsInput = z.infer<typeof reorderAddonsSchema>

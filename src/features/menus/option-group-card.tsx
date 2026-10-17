@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Trash2Icon } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '#/components/ui/button'
@@ -6,11 +7,14 @@ import { useAppForm } from '#/lib/forms/use-app-form'
 import {
   useCreateOptionChoice,
   useDeleteOptionChoice,
+  useReorderOptionChoices,
   useUpdateOptionChoice,
   useUpdateOptionGroup,
 } from '#/lib/queries/menu-options'
+import { SortableList, SortableRow } from '#/components/sortable'
 import type { MenuItemDetail } from '#/lib/queries/menus'
-import { InlineAddField, InlineNameField } from './inline-name-fields'
+import { NameWithIngredients } from './ingredient-row'
+import { InlineAddField } from './inline-name-fields'
 
 type OptionGroup = MenuItemDetail['option_groups'][number]
 
@@ -18,6 +22,7 @@ type OptionGroupCardProps = {
   menuId: string
   itemId: string
   group: OptionGroup
+  handle: ReactNode
   onDelete: (group: OptionGroup) => void
 }
 
@@ -25,12 +30,14 @@ export function OptionGroupCard({
   menuId,
   itemId,
   group,
+  handle,
   onDelete,
 }: OptionGroupCardProps) {
   const updateGroup = useUpdateOptionGroup(menuId)
   const createChoice = useCreateOptionChoice(menuId)
   const updateChoice = useUpdateOptionChoice(menuId)
   const deleteChoice = useDeleteOptionChoice(menuId)
+  const reorderChoices = useReorderOptionChoices(menuId)
 
   const form = useAppForm({
     ...optionGroupFormOptions,
@@ -59,6 +66,7 @@ export function OptionGroupCard({
         }}
       >
         <div className="flex items-start gap-1">
+          {handle}
           <div className="min-w-0 flex-1">
             <form.AppField name="name">
               {(field) => (
@@ -97,26 +105,50 @@ export function OptionGroupCard({
           )}
         </form.AppField>
       </form>
-      <ul className="grid gap-1 border-l-2 pl-3">
+      <SortableList
+        ids={group.option_choices.map((choice) => choice.id)}
+        onReorder={(choiceIds) => {
+          reorderChoices.mutate(
+            { itemId, groupId: group.id, choiceIds },
+            {
+              onError: (error) => {
+                toast.error(error.message)
+              },
+            },
+          )
+        }}
+        className="grid gap-1 border-l-2 pl-3"
+      >
         {group.option_choices.map((choice) => (
-          <li key={choice.id}>
-            <InlineNameField
-              name={choice.name}
-              label="Choice name"
-              onSave={(name) =>
-                updateChoice.mutateAsync({ choiceId: choice.id, name })
-              }
-              onDelete={() => {
-                deleteChoice.mutate(choice.id, {
-                  onError: (error) => {
-                    toast.error(error.message)
-                  },
-                })
-              }}
-            />
-          </li>
+          <SortableRow
+            key={choice.id}
+            id={choice.id}
+            handleLabel={`Reorder ${choice.name}`}
+            className="rounded-3xl"
+          >
+            {(choiceHandle) => (
+              <NameWithIngredients
+                menuId={menuId}
+                parent={{ kind: 'option_choice', id: choice.id }}
+                ingredients={choice.ingredients}
+                handle={choiceHandle}
+                name={choice.name}
+                label="Choice name"
+                onSave={(name) =>
+                  updateChoice.mutateAsync({ choiceId: choice.id, name })
+                }
+                onDelete={() => {
+                  deleteChoice.mutate(choice.id, {
+                    onError: (error) => {
+                      toast.error(error.message)
+                    },
+                  })
+                }}
+              />
+            )}
+          </SortableRow>
         ))}
-      </ul>
+      </SortableList>
       <InlineAddField
         label={`New choice for ${group.name}`}
         placeholder="Add a choice"

@@ -41,7 +41,9 @@ export const menuQueries = {
       queryFn: async () => {
         const { data, error } = await supabase
           .from('menus')
-          .select('*, items(*, option_groups(*, option_choices(*)), addons(*))')
+          .select(
+            '*, items(*, ingredients(*), option_groups(*, option_choices(*, ingredients(*))), addons(*, ingredients(*)))',
+          )
           .eq('id', id)
           .order('position', { referencedTable: 'items' })
           .order('created_at', { referencedTable: 'items' })
@@ -50,6 +52,11 @@ export const menuQueries = {
             referencedTable: 'items.option_groups.option_choices',
           })
           .order('position', { referencedTable: 'items.addons' })
+          .order('created_at', { referencedTable: 'items.ingredients' })
+          .order('created_at', {
+            referencedTable: 'items.option_groups.option_choices.ingredients',
+          })
+          .order('created_at', { referencedTable: 'items.addons.ingredients' })
           .maybeSingle()
         if (error) throw error
         return data

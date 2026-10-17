@@ -223,6 +223,25 @@ Rules:
 - No validation logic or default-value literals duplicated in the component.
   Submit into the matching mutation from `lib/queries/` (use `mutateAsync` in
   `onSubmit` so `SubmitButton` shows the pending state).
+- Choosing how to share form UI:
+  - **Plain `fieldComponents`** (`components/form/`, registered in
+    `use-app-form.ts`): a single reusable input (text, textarea, switch, ...).
+  - **`withFieldGroup`** (exported from `use-app-form.ts`): a cluster of
+    several fields that appears in more than one parent form and binds to the
+    same value shape, e.g. `features/menus/name-description-fields.tsx`
+    (`NameDescriptionFields`, used by the menu dialog and the item sheet).
+    Mount it with `<NameDescriptionFields form={form} fields={{ name: 'name',
+description: 'description' }} />`. Layout differences go in `props`. Group
+    components are imported directly, not registered on the hook. Don't use it
+    for a cluster used once (auth forms differ per field attributes) or for
+    values that are not part of a parent form.
+  - **Standalone mini-form** (own `useAppForm`): transient single-input forms
+    that call a mutation directly instead of producing values for a parent
+    form, e.g. `InlineNameField` / `InlineAddField` in
+    `features/menus/inline-name-fields.tsx`. Each row saves independently by
+    id and reverts on invalid input; folding rows into one parent array form
+    would duplicate server state in form state and couple unrelated rows'
+    validity, so keep them separate.
 - `SubmitButton` disables itself while submitting or while the form is not
   submittable (`canSubmit`, i.e. validation errors), so don't add your own
   `disabled` logic for those cases.
