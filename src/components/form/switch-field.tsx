@@ -1,14 +1,24 @@
 import { useId } from 'react'
-import { Field, FieldLabel } from '#/components/ui/field'
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldLabel,
+} from '#/components/ui/field'
 import { Switch } from '#/components/ui/switch'
 import { useFieldContext } from '#/lib/forms/form-context'
 
 type SwitchFieldProps = {
   label: string
+  description?: string
   onCheckedChange?: (checked: boolean) => void
 }
 
-export function SwitchField({ label, onCheckedChange }: SwitchFieldProps) {
+export function SwitchField({
+  label,
+  description,
+  onCheckedChange,
+}: SwitchFieldProps) {
   const field = useFieldContext<boolean>()
   const id = useId()
   return (
@@ -23,7 +33,10 @@ export function SwitchField({ label, onCheckedChange }: SwitchFieldProps) {
           onCheckedChange?.(checked)
         }}
       />
-      <FieldLabel htmlFor={id}>{label}</FieldLabel>
+      <FieldContent>
+        <FieldLabel htmlFor={id}>{label}</FieldLabel>
+        {description && <FieldDescription>{description}</FieldDescription>}
+      </FieldContent>
     </Field>
   )
 }

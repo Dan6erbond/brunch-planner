@@ -28,6 +28,7 @@ export const brunchSchema = z
     location: z.string().trim().max(120, 'Keep it under 120 characters'),
     description: z.string().trim().max(500, 'Keep it under 500 characters'),
     inviteOnly: z.boolean(),
+    requireItems: z.boolean(),
   })
   .check((ctx) => {
     const { scheduling, startsAt, slots } = ctx.value
@@ -82,6 +83,7 @@ export const brunchRowSchema = z.object({
   responses_close_at: z.string().nullable(),
   invites_sent_at: z.string().nullable(),
   invite_only: z.boolean(),
+  require_items: z.boolean(),
   status: brunchStatusSchema,
   menus: z.object({ name: z.string() }).nullable(),
 })

@@ -228,6 +228,14 @@ function BrunchForm({
             <field.SwitchField label="Invite only (guests get a personal link)" />
           )}
         </form.AppField>
+        <form.AppField name="requireItems">
+          {(field) => (
+            <field.SwitchField
+              label="Require at least one item"
+              description="Guests who are attending must pick something from the menu."
+            />
+          )}
+        </form.AppField>
       </FieldGroup>
       <DialogFooter>
         <form.AppForm>

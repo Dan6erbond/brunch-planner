@@ -186,6 +186,7 @@ export async function createMenu(owner: TestUser): Promise<MenuFixture> {
 export interface BrunchOptions {
   sent?: boolean
   inviteOnly?: boolean
+  requireItems?: boolean
   poll?: boolean
   /** Poll slots to add (only with `poll`). */
   slots?: string[]
@@ -197,7 +198,12 @@ export async function createBrunch(
   options: BrunchOptions = {},
 ) {
   const db = owner.client
-  const { sent = true, inviteOnly = false, poll = false } = options
+  const {
+    sent = true,
+    inviteOnly = false,
+    requireItems = false,
+    poll = false,
+  } = options
   const brunch = must(
     await db
       .from('brunches')
@@ -205,6 +211,7 @@ export async function createBrunch(
         menu_id: menuId,
         title: 'Test brunch',
         invite_only: inviteOnly,
+        require_items: requireItems,
         scheduling: poll ? 'poll' : 'fixed',
         starts_at: poll ? null : '2030-01-01T10:00:00Z',
       })

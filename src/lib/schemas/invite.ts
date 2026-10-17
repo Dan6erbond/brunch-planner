@@ -29,6 +29,7 @@ export const inviteSchema = z.object({
   scheduling: z.enum(['fixed', 'poll']),
   starts_at: z.string().nullable(),
   invite_only: z.boolean(),
+  require_items: z.boolean(),
   host_name: z.string().nullable(),
   cohost_names: z.array(z.string()),
   status: z.enum(['open', 'closed']),

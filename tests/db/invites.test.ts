@@ -474,4 +474,69 @@ describe('public invite and guest RSVP', () => {
       expect((await readResponse(otherResponse)).guest_name).toBe('Sam')
     })
   })
+
+  describe('require_items', () => {
+    const save = async (brunchId: string, payload: object) =>
+      anonClient().rpc('save_response', {
+        p_brunch_id: brunchId,
+        p_payload: { guest_name: 'Sam', ...payload },
+      })
+
+    it('allows attending without items when the setting is off', async () => {
+      const id = must(await save(openBrunchId, { status: 'attending' }))
+      expect((await readResponse(id)).status).toBe('attending')
+    })
+
+    describe('when on', () => {
+      let brunchId: string
+
+      beforeAll(async () => {
+        brunchId = (
+          await createBrunch(owner, fixture.menu.id, { requireItems: true })
+        ).brunch.id
+      })
+
+      it('rejects attending without items', async () => {
+        const { error } = await save(brunchId, { status: 'attending' })
+        expect(error?.message).toMatch(/choose at least one item/)
+      })
+
+      it('rejects attending without items on an existing response', async () => {
+        const id = must(await save(brunchId, attendingPayload()))
+        const { error } = await guest.rpc('save_response', {
+          p_brunch_id: brunchId,
+          p_response_id: id,
+          p_payload: { guest_name: 'Sam', status: 'attending', items: [] },
+        })
+        expect(error?.message).toMatch(/choose at least one item/)
+        expect((await readResponse(id)).response_items).toHaveLength(1)
+      })
+
+      it('accepts attending with items', async () => {
+        const id = must(await save(brunchId, attendingPayload()))
+        expect((await readResponse(id)).status).toBe('attending')
+      })
+
+      it('accepts declined without items', async () => {
+        const id = must(await save(brunchId, { status: 'declined' }))
+        expect((await readResponse(id)).status).toBe('declined')
+      })
+
+      it('accepts a payload without a status key and without items', async () => {
+        const id = must(await save(brunchId, {}))
+        expect((await readResponse(id)).status).toBe('declined')
+      })
+
+      it('exposes the flag through get_invite', async () => {
+        const on = must(
+          await guest.rpc('get_invite', { p_brunch_id: brunchId }),
+        )
+        const off = must(
+          await guest.rpc('get_invite', { p_brunch_id: openBrunchId }),
+        )
+        expect(on).toMatchObject({ require_items: true })
+        expect(off).toMatchObject({ require_items: false })
+      })
+    })
+  })
 })

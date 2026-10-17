@@ -103,14 +103,14 @@ isOneToOne: false
                   ]
                 },"brunches": {
                   Row: {
-                    "created_at": string,"description": string | null,"id": string,"invite_only": boolean,"invites_sent_at": string | null,"location": string | null,"menu_id": string,"owner_id": string,"responses_close_at": string | null,"scheduling": Database["public"]['Enums']["brunch_scheduling"],"starts_at": string | null,"title": string
+                    "created_at": string,"description": string | null,"id": string,"invite_only": boolean,"invites_sent_at": string | null,"location": string | null,"menu_id": string,"owner_id": string,"require_items": boolean,"responses_close_at": string | null,"scheduling": Database["public"]['Enums']["brunch_scheduling"],"starts_at": string | null,"title": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"description"?: string | null,"id"?: string,"invite_only"?: boolean,"invites_sent_at"?: string | null,"location"?: string | null,"menu_id": string,"owner_id"?: string,"responses_close_at"?: string | null,"scheduling"?: Database["public"]['Enums']["brunch_scheduling"],"starts_at"?: string | null,"title": string
+                    "created_at"?: string,"description"?: string | null,"id"?: string,"invite_only"?: boolean,"invites_sent_at"?: string | null,"location"?: string | null,"menu_id": string,"owner_id"?: string,"require_items"?: boolean,"responses_close_at"?: string | null,"scheduling"?: Database["public"]['Enums']["brunch_scheduling"],"starts_at"?: string | null,"title": string
                   }
                   Update: {
-                    "created_at"?: string,"description"?: string | null,"id"?: string,"invite_only"?: boolean,"invites_sent_at"?: string | null,"location"?: string | null,"menu_id"?: string,"owner_id"?: string,"responses_close_at"?: string | null,"scheduling"?: Database["public"]['Enums']["brunch_scheduling"],"starts_at"?: string | null,"title"?: string
+                    "created_at"?: string,"description"?: string | null,"id"?: string,"invite_only"?: boolean,"invites_sent_at"?: string | null,"location"?: string | null,"menu_id"?: string,"owner_id"?: string,"require_items"?: boolean,"responses_close_at"?: string | null,"scheduling"?: Database["public"]['Enums']["brunch_scheduling"],"starts_at"?: string | null,"title"?: string
                   }
                   Relationships: [
                     {
@@ -414,14 +414,14 @@ isOneToOne: false
           Views: {
             "brunches_with_status": {
                   Row: {
-                    "created_at": string | null,"description": string | null,"id": string | null,"invite_only": boolean | null,"invites_sent_at": string | null,"location": string | null,"menu_id": string | null,"owner_id": string | null,"responses_close_at": string | null,"scheduling": Database["public"]['Enums']["brunch_scheduling"] | null,"starts_at": string | null,"status": string | null,"title": string | null
+                    "created_at": string | null,"description": string | null,"id": string | null,"invite_only": boolean | null,"invites_sent_at": string | null,"location": string | null,"menu_id": string | null,"owner_id": string | null,"require_items": boolean | null,"responses_close_at": string | null,"scheduling": Database["public"]['Enums']["brunch_scheduling"] | null,"starts_at": string | null,"status": string | null,"title": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                           "created_at"?: string | null,"description"?: string | null,"id"?: string | null,"invite_only"?: boolean | null,"invites_sent_at"?: string | null,"location"?: string | null,"menu_id"?: string | null,"owner_id"?: string | null,"responses_close_at"?: string | null,"scheduling"?: Database["public"]['Enums']["brunch_scheduling"] | null,"starts_at"?: string | null,"status"?: never,"title"?: string | null
+                           "created_at"?: string | null,"description"?: string | null,"id"?: string | null,"invite_only"?: boolean | null,"invites_sent_at"?: string | null,"location"?: string | null,"menu_id"?: string | null,"owner_id"?: string | null,"require_items"?: boolean | null,"responses_close_at"?: string | null,"scheduling"?: Database["public"]['Enums']["brunch_scheduling"] | null,"starts_at"?: string | null,"status"?: never,"title"?: string | null
                          }
                         Update: {
-                           "created_at"?: string | null,"description"?: string | null,"id"?: string | null,"invite_only"?: boolean | null,"invites_sent_at"?: string | null,"location"?: string | null,"menu_id"?: string | null,"owner_id"?: string | null,"responses_close_at"?: string | null,"scheduling"?: Database["public"]['Enums']["brunch_scheduling"] | null,"starts_at"?: string | null,"status"?: never,"title"?: string | null
+                           "created_at"?: string | null,"description"?: string | null,"id"?: string | null,"invite_only"?: boolean | null,"invites_sent_at"?: string | null,"location"?: string | null,"menu_id"?: string | null,"owner_id"?: string | null,"require_items"?: boolean | null,"responses_close_at"?: string | null,"scheduling"?: Database["public"]['Enums']["brunch_scheduling"] | null,"starts_at"?: string | null,"status"?: never,"title"?: string | null
                          }
                         Relationships: [
                     {

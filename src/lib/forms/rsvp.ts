@@ -1,6 +1,10 @@
 import { formOptions } from '@tanstack/react-form'
 import type { Invite, SavedResponse } from '#/lib/schemas/invite'
-import { rsvpSchema, type RsvpInput } from '#/lib/schemas/rsvp'
+import {
+  rsvpRequiringItemsSchema,
+  rsvpSchema,
+  type RsvpInput,
+} from '#/lib/schemas/rsvp'
 
 export function rsvpDefaults(
   invite: Invite,
@@ -36,8 +40,13 @@ export function rsvpDefaults(
   }
 }
 
-export const rsvpFormOptions = (defaultValues: RsvpInput) =>
+export const rsvpFormOptions = (
+  defaultValues: RsvpInput,
+  requireItems: boolean,
+) =>
   formOptions({
     defaultValues,
-    validators: { onChange: rsvpSchema },
+    validators: {
+      onChange: requireItems ? rsvpRequiringItemsSchema : rsvpSchema,
+    },
   })

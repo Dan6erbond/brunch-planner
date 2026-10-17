@@ -21,7 +21,7 @@ export function RsvpForm({ invite, response }: RsvpFormProps) {
   const isDeclined = response?.status === 'declined'
   const pollOpen = invite.scheduling === 'poll' && invite.starts_at === null
   const form = useAppForm({
-    ...rsvpFormOptions(rsvpDefaults(invite, response)),
+    ...rsvpFormOptions(rsvpDefaults(invite, response), invite.require_items),
     onSubmit: ({ value }) => save(value, false),
   })
 
@@ -64,7 +64,10 @@ export function RsvpForm({ invite, response }: RsvpFormProps) {
         <Alert>
           <AlertTitle>You’ve told the host you can’t make it</AlertTitle>
           <AlertDescription>
-            Changed your mind? Send your RSVP below, picking food is optional.
+            Changed your mind? Send your RSVP below
+            {invite.require_items
+              ? ', choosing at least one item.'
+              : ', picking food is optional.'}
           </AlertDescription>
         </Alert>
       )}
@@ -106,7 +109,9 @@ export function RsvpForm({ invite, response }: RsvpFormProps) {
       <div className="grid gap-3">
         <h2 className="text-lg font-semibold">What would you like?</h2>
         <p className="-mt-1 text-sm text-muted-foreground">
-          Optional. You can RSVP without choosing food.
+          {invite.require_items
+            ? 'Choose at least one item to RSVP.'
+            : 'Optional. You can RSVP without choosing food.'}
         </p>
         {invite.menu.items.map((item, index) => (
           <Card key={item.id}>

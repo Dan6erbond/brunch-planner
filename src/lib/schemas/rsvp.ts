@@ -57,6 +57,15 @@ export const rsvpSchema = z.object({
   items: z.array(rsvpItemSchema),
   dateVotes: z.array(dateVoteSchema),
 })
+export const rsvpRequiringItemsSchema = rsvpSchema.check((ctx) => {
+  if (ctx.value.items.some((item) => item.quantity > 0)) return
+  ctx.issues.push({
+    code: 'custom',
+    input: ctx.value.items,
+    path: ['items'],
+    message: 'Choose at least one item',
+  })
+})
 export const declineSchema = rsvpSchema.pick({ guestName: true, notes: true })
 export type RsvpInput = z.infer<typeof rsvpSchema>
 export type RsvpItemInput = RsvpInput['items'][number]

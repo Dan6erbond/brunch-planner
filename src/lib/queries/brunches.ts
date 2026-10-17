@@ -30,6 +30,7 @@ const toRow = (input: BrunchInput) => {
     location,
     description,
     inviteOnly,
+    requireItems,
   } = brunchSchema.parse(input)
   return {
     title,
@@ -41,6 +42,7 @@ const toRow = (input: BrunchInput) => {
     location: toNullable(location),
     description: toNullable(description),
     invite_only: inviteOnly,
+    require_items: requireItems,
   }
 }
 

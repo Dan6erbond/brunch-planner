@@ -344,6 +344,7 @@ function BrunchView({ brunch }: { brunch: BrunchRow }) {
           location: brunch.location ?? '',
           description: brunch.description ?? '',
           inviteOnly: brunch.invite_only,
+          requireItems: brunch.require_items,
         }}
         onSubmit={async (value) => {
           await updateBrunch.mutateAsync(value)
