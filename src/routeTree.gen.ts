@@ -13,6 +13,8 @@ import { Route as AuthedRouteImport } from './routes/_authed'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as AuthedIndexRouteImport } from './routes/_authed/index'
+import { Route as AuthedBrunchesIndexRouteImport } from './routes/_authed/brunches/index'
+import { Route as AuthedBrunchesBrunchIdRouteImport } from './routes/_authed/brunches/$brunchId'
 import { Route as AuthedMenusIndexRouteImport } from './routes/_authed/menus/index'
 import { Route as AuthedMenusMenuIdRouteImport } from './routes/_authed/menus/$menuId'
 
@@ -35,6 +37,16 @@ const AuthedIndexRoute = AuthedIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthedRoute,
 } as any)
+const AuthedBrunchesIndexRoute = AuthedBrunchesIndexRouteImport.update({
+  id: '/brunches/',
+  path: '/brunches/',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedBrunchesBrunchIdRoute = AuthedBrunchesBrunchIdRouteImport.update({
+  id: '/brunches/$brunchId',
+  path: '/brunches/$brunchId',
+  getParentRoute: () => AuthedRoute,
+} as any)
 const AuthedMenusIndexRoute = AuthedMenusIndexRouteImport.update({
   id: '/menus/',
   path: '/menus/',
@@ -50,14 +62,18 @@ export interface FileRoutesByFullPath {
   '/': typeof AuthedIndexRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/brunches/$brunchId': typeof AuthedBrunchesBrunchIdRoute
   '/menus/$menuId': typeof AuthedMenusMenuIdRoute
+  '/brunches/': typeof AuthedBrunchesIndexRoute
   '/menus/': typeof AuthedMenusIndexRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/': typeof AuthedIndexRoute
+  '/brunches/$brunchId': typeof AuthedBrunchesBrunchIdRoute
   '/menus/$menuId': typeof AuthedMenusMenuIdRoute
+  '/brunches': typeof AuthedBrunchesIndexRoute
   '/menus': typeof AuthedMenusIndexRoute
 }
 export interface FileRoutesById {
@@ -66,21 +82,39 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/_authed/': typeof AuthedIndexRoute
+  '/_authed/brunches/$brunchId': typeof AuthedBrunchesBrunchIdRoute
   '/_authed/menus/$menuId': typeof AuthedMenusMenuIdRoute
+  '/_authed/brunches/': typeof AuthedBrunchesIndexRoute
   '/_authed/menus/': typeof AuthedMenusIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/register' | '/menus/$menuId' | '/menus/'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/register'
+    | '/brunches/$brunchId'
+    | '/menus/$menuId'
+    | '/brunches/'
+    | '/menus/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/login' | '/register' | '/' | '/menus/$menuId' | '/menus'
+  to:
+    | '/login'
+    | '/register'
+    | '/'
+    | '/brunches/$brunchId'
+    | '/menus/$menuId'
+    | '/brunches'
+    | '/menus'
   id:
     | '__root__'
     | '/_authed'
     | '/login'
     | '/register'
     | '/_authed/'
+    | '/_authed/brunches/$brunchId'
     | '/_authed/menus/$menuId'
+    | '/_authed/brunches/'
     | '/_authed/menus/'
   fileRoutesById: FileRoutesById
 }
@@ -120,6 +154,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedIndexRouteImport
       parentRoute: typeof AuthedRoute
     }
+    '/_authed/brunches/': {
+      id: '/_authed/brunches/'
+      path: '/brunches'
+      fullPath: '/brunches/'
+      preLoaderRoute: typeof AuthedBrunchesIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/brunches/$brunchId': {
+      id: '/_authed/brunches/$brunchId'
+      path: '/brunches/$brunchId'
+      fullPath: '/brunches/$brunchId'
+      preLoaderRoute: typeof AuthedBrunchesBrunchIdRouteImport
+      parentRoute: typeof AuthedRoute
+    }
     '/_authed/menus/': {
       id: '/_authed/menus/'
       path: '/menus'
@@ -139,13 +187,17 @@ declare module '@tanstack/react-router' {
 
 interface AuthedRouteChildren {
   AuthedIndexRoute: typeof AuthedIndexRoute
+  AuthedBrunchesBrunchIdRoute: typeof AuthedBrunchesBrunchIdRoute
   AuthedMenusMenuIdRoute: typeof AuthedMenusMenuIdRoute
+  AuthedBrunchesIndexRoute: typeof AuthedBrunchesIndexRoute
   AuthedMenusIndexRoute: typeof AuthedMenusIndexRoute
 }
 
 const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedIndexRoute: AuthedIndexRoute,
+  AuthedBrunchesBrunchIdRoute: AuthedBrunchesBrunchIdRoute,
   AuthedMenusMenuIdRoute: AuthedMenusMenuIdRoute,
+  AuthedBrunchesIndexRoute: AuthedBrunchesIndexRoute,
   AuthedMenusIndexRoute: AuthedMenusIndexRoute,
 }
 

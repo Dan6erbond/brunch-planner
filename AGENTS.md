@@ -38,6 +38,9 @@ create/edit menus, create brunches. The guest/invite side stays public for now.
 - **Forms**: TanStack Form + Zod, shared schemas between forms and mutations.
 - **UI**: shadcn/ui on Tailwind v4. Use the CLI to add components; don't
   hand-write primitives that shadcn already provides.
+  `components/ui/card.tsx` is hand-extended with Base UI's `render` prop (via
+  `useRender`, like `badge.tsx`) so a Card can render as a router `Link`;
+  re-apply it if the file is regenerated.
 - **Schema/security**: Supabase CLI migrations + RLS policies, checked into
   `supabase/migrations/`. The DB schema is never hand-edited in the dashboard
   and then forgotten — migrations are the source of truth.

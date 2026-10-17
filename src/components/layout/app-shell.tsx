@@ -73,7 +73,14 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Link to="/" className="font-heading text-lg font-semibold">
               Brunch Planner
             </Link>
-            <nav>
+            <nav className="flex items-center gap-4">
+              <Link
+                to="/brunches"
+                className="text-sm text-muted-foreground hover:text-foreground"
+                activeProps={{ className: 'text-foreground' }}
+              >
+                Brunches
+              </Link>
               <Link
                 to="/menus"
                 className="text-sm text-muted-foreground hover:text-foreground"
