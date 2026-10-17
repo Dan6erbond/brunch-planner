@@ -90,29 +90,38 @@ export function summarizeItems(menu: MenuDetail, responses: Response[]) {
   const total = (matches: (line: ResponseItem) => boolean) =>
     lines.filter(matches).reduce((sum, line) => sum + line.quantity, 0)
 
-  return menu.items.map((item) => ({
-    id: item.id,
-    name: item.name,
-    count: total((line) => line.item_id === item.id),
-    groups: item.option_groups.map((group) => ({
-      id: group.id,
-      name: group.name,
-      choices: group.option_choices.map((choice) => ({
-        id: choice.id,
-        name: choice.name,
-        count: total((line) =>
-          line.response_item_choices.some(
-            (c) => c.option_choice_id === choice.id,
-          ),
+  const byCount = <T extends { count: number }>(rows: T[]) =>
+    rows.sort((a, b) => b.count - a.count)
+
+  return byCount(
+    menu.items.map((item) => ({
+      id: item.id,
+      name: item.name,
+      count: total((line) => line.item_id === item.id),
+      groups: item.option_groups.map((group) => ({
+        id: group.id,
+        name: group.name,
+        choices: byCount(
+          group.option_choices.map((choice) => ({
+            id: choice.id,
+            name: choice.name,
+            count: total((line) =>
+              line.response_item_choices.some(
+                (c) => c.option_choice_id === choice.id,
+              ),
+            ),
+          })),
         ),
       })),
-    })),
-    addons: item.addons.map((addon) => ({
-      id: addon.id,
-      name: addon.name,
-      count: total((line) =>
-        line.response_item_addons.some((a) => a.addon_id === addon.id),
+      addons: byCount(
+        item.addons.map((addon) => ({
+          id: addon.id,
+          name: addon.name,
+          count: total((line) =>
+            line.response_item_addons.some((a) => a.addon_id === addon.id),
+          ),
+        })),
       ),
     })),
-  }))
+  )
 }
