@@ -34,13 +34,25 @@ export const brunchQueries = {
       queryKey: brunchKeys.list(userId),
       staleTime: 30_000,
       queryFn: async () => {
+        const { data: shared, error: sharedError } = await supabase
+          .from('brunch_collaborators')
+          .select('brunch_id, role')
+          .eq('user_id', userId)
+        if (sharedError) throw sharedError
+        const roles = new Map(shared.map((row) => [row.brunch_id, row.role]))
+        const filter = [`owner_id.eq.${userId}`]
+        if (roles.size > 0)
+          filter.push(`id.in.(${[...roles.keys()].join(',')})`)
         const { data, error } = await supabase
           .from('brunches_with_status')
           .select(SELECT)
-          .eq('owner_id', userId)
+          .or(filter.join(','))
           .order('starts_at', { ascending: true, nullsFirst: false })
         if (error) throw error
-        return data.map((row) => brunchRowSchema.parse(row))
+        return data.map((row) => {
+          const brunch = brunchRowSchema.parse(row)
+          return { ...brunch, role: roles.get(brunch.id) ?? ('owner' as const) }
+        })
       },
     }),
   detail: (id: string) =>
@@ -73,6 +85,11 @@ export const brunchQueries = {
       },
     }),
 }
+
+export type BrunchListRow = InferDataFromTag<
+  unknown,
+  ReturnType<typeof brunchQueries.list>['queryKey']
+>[number]
 
 export type BrunchResponse = NonNullable<
   InferDataFromTag<

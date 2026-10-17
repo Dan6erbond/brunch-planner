@@ -4,7 +4,10 @@ import type { BrunchRow } from '#/lib/schemas/brunch'
 export const formatStartsAt = (startsAt: string | null) =>
   startsAt ? formatDayTime(startsAt) : 'No date yet'
 
-export function splitUpcomingAndPast(brunches: BrunchRow[], now = Date.now()) {
+export function splitUpcomingAndPast<T extends BrunchRow>(
+  brunches: T[],
+  now = Date.now(),
+) {
   const upcoming = brunches
     .filter((b) => timeOf(b.starts_at) >= now)
     .sort((a, b) => timeOf(a.starts_at) - timeOf(b.starts_at))

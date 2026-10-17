@@ -1,4 +1,4 @@
-import type { BrunchRow, BrunchStatus } from '#/lib/schemas/brunch'
+import type { BrunchStatus } from '#/lib/schemas/brunch'
 import { BrunchStatusBadge, statusLabels } from './brunch-status-badge'
 import {
   CalendarIcon,
@@ -7,6 +7,7 @@ import {
   PlusIcon,
   UtensilsIcon,
 } from 'lucide-react'
+import { Badge } from '#/components/ui/badge'
 import { Card, CardHeader, CardTitle } from '#/components/ui/card'
 import {
   Collapsible,
@@ -16,7 +17,12 @@ import {
 import { Link, useNavigate } from '@tanstack/react-router'
 import { ToggleGroup, ToggleGroupItem } from '#/components/ui/toggle-group'
 import { useUserId } from '#/lib/queries/auth'
-import { brunchQueries, useCreateBrunch } from '#/lib/queries/brunches'
+import {
+  brunchQueries,
+  type BrunchListRow,
+  useCreateBrunch,
+} from '#/lib/queries/brunches'
+import { brunchRoleLabels } from './collaborator-roles'
 import { formatStartsAt, splitUpcomingAndPast } from './brunch-format'
 
 import { BrunchFormDialog } from './brunch-form-dialog'
@@ -45,7 +51,8 @@ export function BrunchList() {
 
   const visible =
     filter === 'all' ? brunches : brunches.filter((b) => b.status === filter)
-  const { upcoming, past } = splitUpcomingAndPast(visible)
+  const owned = splitUpcomingAndPast(visible.filter((b) => b.role === 'owner'))
+  const shared = splitUpcomingAndPast(visible.filter((b) => b.role !== 'owner'))
 
   return (
     <div className="grid gap-6">
@@ -96,30 +103,18 @@ export function BrunchList() {
             ))}
           </ToggleGroup>
 
-          {upcoming.length === 0 && past.length === 0 && (
+          {visible.length === 0 && (
             <p className="text-sm text-muted-foreground">
               No {filter === 'all' ? '' : statusLabels[filter].toLowerCase()}{' '}
               brunches.
             </p>
           )}
-          {upcoming.length > 0 && <BrunchCards brunches={upcoming} />}
-          {past.length > 0 && (
-            <Collapsible className="grid gap-3">
-              <CollapsibleTrigger
-                render={
-                  <Button
-                    variant="ghost"
-                    className="group w-fit justify-start px-2"
-                  />
-                }
-              >
-                <ChevronDownIcon className="transition-transform group-data-[panel-open]:rotate-180" />
-                Past brunches ({past.length})
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <BrunchCards brunches={past} />
-              </CollapsibleContent>
-            </Collapsible>
+          <BrunchGroups upcoming={owned.upcoming} past={owned.past} />
+          {shared.upcoming.length + shared.past.length > 0 && (
+            <section className="grid gap-4">
+              <h2 className="text-lg font-medium">Shared with me</h2>
+              <BrunchGroups upcoming={shared.upcoming} past={shared.past} />
+            </section>
           )}
         </>
       )}
@@ -143,7 +138,39 @@ export function BrunchList() {
   )
 }
 
-function BrunchCards({ brunches }: { brunches: BrunchRow[] }) {
+function BrunchGroups({
+  upcoming,
+  past,
+}: {
+  upcoming: BrunchListRow[]
+  past: BrunchListRow[]
+}) {
+  return (
+    <>
+      {upcoming.length > 0 && <BrunchCards brunches={upcoming} />}
+      {past.length > 0 && (
+        <Collapsible className="grid gap-3">
+          <CollapsibleTrigger
+            render={
+              <Button
+                variant="ghost"
+                className="group w-fit justify-start px-2"
+              />
+            }
+          >
+            <ChevronDownIcon className="transition-transform group-data-[panel-open]:rotate-180" />
+            Past brunches ({past.length})
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <BrunchCards brunches={past} />
+          </CollapsibleContent>
+        </Collapsible>
+      )}
+    </>
+  )
+}
+
+function BrunchCards({ brunches }: { brunches: BrunchListRow[] }) {
   return (
     <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {brunches.map((brunch) => (
@@ -155,7 +182,7 @@ function BrunchCards({ brunches }: { brunches: BrunchRow[] }) {
   )
 }
 
-function BrunchCard({ brunch }: { brunch: BrunchRow }) {
+function BrunchCard({ brunch }: { brunch: BrunchListRow }) {
   return (
     <Card
       render={
@@ -183,6 +210,11 @@ function BrunchCard({ brunch }: { brunch: BrunchRow }) {
             <li className="flex items-center gap-2">
               <UtensilsIcon className="size-4 shrink-0" />
               <span className="truncate">{brunch.menus.name}</span>
+            </li>
+          )}
+          {brunch.role !== 'owner' && (
+            <li>
+              <Badge variant="secondary">{brunchRoleLabels[brunch.role]}</Badge>
             </li>
           )}
         </ul>

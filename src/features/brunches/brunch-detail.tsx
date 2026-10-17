@@ -5,9 +5,12 @@ import {
   ArrowLeftIcon,
   CalendarIcon,
   CopyIcon,
+  LogOutIcon,
   MapPinIcon,
+  MoreVerticalIcon,
   PencilIcon,
   SendIcon,
+  Share2Icon,
   Trash2Icon,
   UtensilsIcon,
 } from 'lucide-react'
@@ -30,7 +33,18 @@ import {
   CardHeader,
   CardTitle,
 } from '#/components/ui/card'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '#/components/ui/dropdown-menu'
 import { Input } from '#/components/ui/input'
+import { useUserId } from '#/lib/queries/auth'
+import {
+  useBrunchRole,
+  useRemoveBrunchCollaborator,
+} from '#/lib/queries/brunch-collaborators'
 import {
   brunchQueries,
   useDeleteBrunch,
@@ -43,6 +57,7 @@ import { BrunchFormDialog } from './brunch-form-dialog'
 import { formatStartsAt } from './brunch-format'
 import { BrunchStatusBadge } from './brunch-status-badge'
 import { ResponsesSection } from './responses-section'
+import { ShareBrunchDialog } from './share-brunch-dialog'
 
 export function BrunchDetail({ brunchId }: { brunchId: string }) {
   const { data: brunch } = useSuspenseQuery(brunchQueries.detail(brunchId))
@@ -75,14 +90,19 @@ function BrunchView({ brunch }: { brunch: BrunchRow }) {
   const navigate = useNavigate()
   const sendInvites = useSendInvites()
   const deleteBrunch = useDeleteBrunch()
-  const updateBrunch = useUpdateBrunch(brunch.id, {
-    lockMenu: brunch.status !== 'draft',
-  })
+  const userId = useUserId()
+  const role = useBrunchRole(brunch.id)
+  const leaveBrunch = useRemoveBrunchCollaborator(brunch.id)
+  const isOwner = role === 'owner'
+  const canManage = isOwner || role === 'co_host'
+  const isDraft = brunch.status === 'draft'
+  const lockMenu = !isDraft || !isOwner
+  const updateBrunch = useUpdateBrunch(brunch.id, { lockMenu })
+  const [sharing, setSharing] = useState(false)
   const [editing, setEditing] = useState(false)
   const [confirmingSend, setConfirmingSend] = useState(false)
   const [deleting, setDeleting] = useState(false)
 
-  const isDraft = brunch.status === 'draft'
   const canSend = isDraft && brunch.starts_at !== null
   const inviteUrl = `${window.location.origin}/invites/${brunch.id}`
 
@@ -97,7 +117,7 @@ function BrunchView({ brunch }: { brunch: BrunchRow }) {
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          {isDraft && (
+          {canManage && isDraft && (
             <Button
               disabled={!canSend}
               onClick={() => {
@@ -108,24 +128,67 @@ function BrunchView({ brunch }: { brunch: BrunchRow }) {
               Send invites
             </Button>
           )}
-          <Button
-            variant="outline"
-            onClick={() => {
-              setEditing(true)
-            }}
-          >
-            <PencilIcon />
-            Edit
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => {
-              setDeleting(true)
-            }}
-          >
-            <Trash2Icon />
-            Delete
-          </Button>
+          {canManage && (
+            <Button
+              variant="outline"
+              onClick={() => {
+                setEditing(true)
+              }}
+            >
+              <PencilIcon />
+              Edit
+            </Button>
+          )}
+          {role !== 'none' && (
+            <DropdownMenu modal={false}>
+              <DropdownMenuTrigger
+                render={<Button variant="outline" size="icon" />}
+              >
+                <MoreVerticalIcon />
+                <span className="sr-only">Brunch actions</span>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {isOwner ? (
+                  <>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setSharing(true)
+                      }}
+                    >
+                      <Share2Icon />
+                      Share
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      variant="destructive"
+                      onClick={() => {
+                        setDeleting(true)
+                      }}
+                    >
+                      <Trash2Icon />
+                      Delete
+                    </DropdownMenuItem>
+                  </>
+                ) : (
+                  <DropdownMenuItem
+                    onClick={() => {
+                      leaveBrunch.mutate(userId, {
+                        onSuccess: () => {
+                          toast.success('You left the brunch')
+                          void navigate({ to: '/brunches' })
+                        },
+                        onError: (error) => {
+                          toast.error(error.message)
+                        },
+                      })
+                    }}
+                  >
+                    <LogOutIcon />
+                    Leave
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </div>
 
@@ -163,7 +226,7 @@ function BrunchView({ brunch }: { brunch: BrunchRow }) {
 
       {isDraft ? (
         <p className="text-sm text-muted-foreground">
-          This brunch is a draft. Guests can’t see it until you send invites.
+          This brunch is a draft. Guests can’t see it until invites are sent.
         </p>
       ) : (
         <Card>
@@ -201,17 +264,25 @@ function BrunchView({ brunch }: { brunch: BrunchRow }) {
         isDraft={isDraft}
       />
 
+      {isOwner && (
+        <ShareBrunchDialog
+          brunchId={brunch.id}
+          open={sharing}
+          onOpenChange={setSharing}
+        />
+      )}
+
       <BrunchFormDialog
         open={editing}
         onOpenChange={setEditing}
         title="Edit brunch"
         description={
-          isDraft
-            ? 'Change any detail while it’s still a draft.'
-            : 'The menu is locked once invites have been sent.'
+          lockMenu
+            ? 'The menu is locked once invites are sent, and only the owner can change it.'
+            : 'Change any detail while it’s still a draft.'
         }
         submitLabel="Save"
-        lockMenu={!isDraft}
+        lockMenu={lockMenu}
         initialValues={{
           title: brunch.title,
           menuId: brunch.menu_id,

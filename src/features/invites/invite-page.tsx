@@ -124,11 +124,16 @@ function SavedNotice() {
 }
 
 function InviteDetails({ invite }: { invite: Invite }) {
+  const hosts = [invite.host_name, ...invite.cohost_names].filter(
+    (name) => name !== null,
+  )
   return (
     <header className="grid gap-3">
       <h1 className="text-3xl font-semibold break-words">{invite.title}</h1>
-      {invite.host_name && (
-        <p className="text-muted-foreground">Hosted by {invite.host_name}</p>
+      {hosts.length > 0 && (
+        <p className="text-muted-foreground">
+          Hosted by {new Intl.ListFormat('en').format(hosts)}
+        </p>
       )}
       <p className="flex items-center gap-2">
         <CalendarIcon className="size-4 shrink-0 text-muted-foreground" />
