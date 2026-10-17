@@ -3,6 +3,7 @@ import { Link, useNavigate } from '@tanstack/react-router'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import {
   ArrowLeftIcon,
+  CopyIcon,
   LogOutIcon,
   MoreVerticalIcon,
   PencilIcon,
@@ -26,6 +27,7 @@ import {
 import {
   menuQueries,
   type MenuItemDetail,
+  useCopyMenu,
   useDeleteItem,
   useDeleteMenu,
   useReorderItems,
@@ -44,6 +46,7 @@ export function MenuEditor({ menuId }: { menuId: string }) {
   const navigate = useNavigate()
   const updateMenu = useUpdateMenu(menuId)
   const deleteMenu = useDeleteMenu()
+  const copyMenu = useCopyMenu()
   const deleteItem = useDeleteItem(menuId)
   const reorder = useReorderItems()
   const userId = useUserId()
@@ -114,6 +117,25 @@ export function MenuEditor({ menuId }: { menuId: string }) {
                   Edit menu
                 </DropdownMenuItem>
               )}
+              <DropdownMenuItem
+                onClick={() => {
+                  copyMenu.mutate(menuId, {
+                    onSuccess: (newMenuId) => {
+                      toast.success('Menu copied to your menus')
+                      void navigate({
+                        to: '/menus/$menuId',
+                        params: { menuId: newMenuId },
+                      })
+                    },
+                    onError: (error) => {
+                      toast.error(error.message)
+                    },
+                  })
+                }}
+              >
+                <CopyIcon />
+                {isOwner ? 'Duplicate' : 'Copy to my menus'}
+              </DropdownMenuItem>
               {isOwner && (
                 <DropdownMenuItem
                   onClick={() => {

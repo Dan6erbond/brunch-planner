@@ -105,6 +105,21 @@ export function useCreateMenu() {
   })
 }
 
+export function useCopyMenu() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (menuId: string) => {
+      const { data, error } = await supabase.rpc('copy_menu', {
+        p_menu_id: menuId,
+      })
+      if (error) throw error
+      return data
+    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: menuKeys.lists() }),
+  })
+}
+
 export function useUpdateMenu(menuId: string) {
   const queryClient = useQueryClient()
   return useMutation({

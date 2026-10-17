@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import {
+  CopyIcon,
   MoreVerticalIcon,
   PencilIcon,
   PlusIcon,
@@ -26,6 +27,7 @@ import {
 import {
   menuQueries,
   type MenuListRow,
+  useCopyMenu,
   useCreateMenu,
   useDeleteMenu,
   useUpdateMenu,
@@ -44,11 +46,23 @@ export function MenuList() {
   const navigate = useNavigate()
   const createMenu = useCreateMenu()
   const deleteMenu = useDeleteMenu()
+  const copyMenu = useCopyMenu()
   const owned = menus.filter((menu) => menu.role === 'owner')
   const shared = menus.filter((menu) => menu.role !== 'owner')
   const [creating, setCreating] = useState(false)
   const [renaming, setRenaming] = useState<MenuRow | null>(null)
   const [deleting, setDeleting] = useState<MenuRow | null>(null)
+  const onCopy = (menu: MenuRow) => {
+    copyMenu.mutate(menu.id, {
+      onSuccess: (menuId) => {
+        toast.success('Menu copied to your menus')
+        void navigate({ to: '/menus/$menuId', params: { menuId } })
+      },
+      onError: (error) => {
+        toast.error(error.message)
+      },
+    })
+  }
 
   return (
     <div className="grid gap-6">
@@ -86,6 +100,7 @@ export function MenuList() {
             <MenuGrid
               menus={owned}
               onRename={setRenaming}
+              onCopy={onCopy}
               onDelete={setDeleting}
             />
           )}
@@ -95,6 +110,7 @@ export function MenuList() {
               <MenuGrid
                 menus={shared}
                 onRename={setRenaming}
+                onCopy={onCopy}
                 onDelete={setDeleting}
               />
             </section>
@@ -181,10 +197,12 @@ function RenameMenuDialog({
 function MenuGrid({
   menus,
   onRename,
+  onCopy,
   onDelete,
 }: {
   menus: MenuListRow[]
   onRename: (menu: MenuRow) => void
+  onCopy: (menu: MenuRow) => void
   onDelete: (menu: MenuRow) => void
 }) {
   return (
@@ -197,6 +215,9 @@ function MenuGrid({
             itemCount={items[0]?.count ?? 0}
             onRename={() => {
               onRename(menu)
+            }}
+            onCopy={() => {
+              onCopy(menu)
             }}
             onDelete={() => {
               onDelete(menu)
@@ -213,12 +234,14 @@ function MenuCard({
   role,
   itemCount,
   onRename,
+  onCopy,
   onDelete,
 }: {
   menu: MenuRow
   role: MenuListRow['role']
   itemCount: number
   onRename: () => void
+  onCopy: () => void
   onDelete: () => void
 }) {
   return (
@@ -243,28 +266,32 @@ function MenuCard({
           )}
         </p>
         <CardAction className="relative z-10">
-          {role !== 'viewer' && (
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                render={<Button variant="ghost" size="icon-sm" />}
-              >
-                <MoreVerticalIcon />
-                <span className="sr-only">Menu actions</span>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={<Button variant="ghost" size="icon-sm" />}
+            >
+              <MoreVerticalIcon />
+              <span className="sr-only">Menu actions</span>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {role !== 'viewer' && (
                 <DropdownMenuItem onClick={onRename}>
                   <PencilIcon />
                   Edit
                 </DropdownMenuItem>
-                {role === 'owner' && (
-                  <DropdownMenuItem variant="destructive" onClick={onDelete}>
-                    <Trash2Icon />
-                    Delete
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
+              )}
+              <DropdownMenuItem onClick={onCopy}>
+                <CopyIcon />
+                {role === 'owner' ? 'Duplicate' : 'Copy to my menus'}
+              </DropdownMenuItem>
+              {role === 'owner' && (
+                <DropdownMenuItem variant="destructive" onClick={onDelete}>
+                  <Trash2Icon />
+                  Delete
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </CardAction>
       </CardHeader>
     </Card>

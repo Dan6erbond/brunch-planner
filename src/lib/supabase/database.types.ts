@@ -462,6 +462,9 @@ isOneToOne: false
 "can_read_menu":
 { Args: { "p_menu_id": string }; Returns: boolean
                            },
+"copy_menu":
+{ Args: { "p_menu_id": string }; Returns: string
+                           },
 "get_brunch_cohost_names":
 { Args: { "p_brunch_id": string }; Returns: (string)[]
                            },
