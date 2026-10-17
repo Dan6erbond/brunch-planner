@@ -23,7 +23,7 @@ export function useAddGuest(brunchId: string) {
   })
 }
 
-export function useRemoveGuest(brunchId: string) {
+export function useRemoveResponse(brunchId: string) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (responseId: string) => {

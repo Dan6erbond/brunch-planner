@@ -20,7 +20,7 @@ import { ConfirmDeleteDialog } from '#/components/confirm-delete-dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '#/components/ui/tabs'
 import { formatShortDayTime } from '#/lib/date'
 import { brunchQueries, type BrunchResponse } from '#/lib/queries/brunches'
-import { useRemoveGuest } from '#/lib/queries/guests'
+import { useRemoveResponse } from '#/lib/queries/guests'
 import { menuQueries, type MenuDetail } from '#/lib/queries/menus'
 import {
   countGuests,
@@ -121,7 +121,8 @@ function ResponsesTabs({
                 brunchId={brunchId}
                 menu={menu}
                 responses={responses}
-                manageGuests={inviteOnly && canManage}
+                inviteOnly={inviteOnly}
+                canManage={canManage}
               />
             </TabsContent>
             <TabsContent value="summary">
@@ -151,14 +152,14 @@ function GuestList({
   brunchId,
   menu,
   responses,
-  manageGuests,
+  inviteOnly,
+  canManage,
 }: {
   brunchId: string
   menu: MenuDetail
   responses: BrunchResponse[]
-  manageGuests: boolean
-}) {
-  const removeGuest = useRemoveGuest(brunchId)
+} & ManageProps) {
+  const removeResponse = useRemoveResponse(brunchId)
   const [removing, setRemoving] = useState<BrunchResponse | null>(null)
   return (
     <ul className="grid gap-2">
@@ -187,44 +188,44 @@ function GuestList({
                     )}
                   </span>
                 </CollapsibleTrigger>
-                {manageGuests && (
-                  <>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        navigator.clipboard
-                          .writeText(guestLink(brunchId, response.id))
-                          .then(
-                            () => {
-                              toast.success(
-                                `Link for ${response.guest_name} copied`,
-                              )
-                            },
-                            () => {
-                              toast.error('Couldn’t copy the link')
-                            },
-                          )
-                      }}
-                    >
-                      <CopyIcon />
-                      <span className="sr-only">
-                        Copy link for {response.guest_name}
-                      </span>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        setRemoving(response)
-                      }}
-                    >
-                      <Trash2Icon />
-                      <span className="sr-only">
-                        Remove {response.guest_name}
-                      </span>
-                    </Button>
-                  </>
+                {inviteOnly && canManage && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      navigator.clipboard
+                        .writeText(guestLink(brunchId, response.id))
+                        .then(
+                          () => {
+                            toast.success(
+                              `Link for ${response.guest_name} copied`,
+                            )
+                          },
+                          () => {
+                            toast.error('Couldn’t copy the link')
+                          },
+                        )
+                    }}
+                  >
+                    <CopyIcon />
+                    <span className="sr-only">
+                      Copy link for {response.guest_name}
+                    </span>
+                  </Button>
+                )}
+                {canManage && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      setRemoving(response)
+                    }}
+                  >
+                    <Trash2Icon />
+                    <span className="sr-only">
+                      Remove {response.guest_name}
+                    </span>
+                  </Button>
                 )}
               </div>
               <CollapsibleContent className="grid gap-3 border-t p-3 text-sm">
@@ -266,13 +267,17 @@ function GuestList({
           if (!open) setRemoving(null)
         }}
         title={`Remove ${removing?.guest_name ?? 'guest'}?`}
-        description="Their personal link stops working and their response is deleted. It can’t be undone."
-        pending={removeGuest.isPending}
+        description={
+          inviteOnly
+            ? 'Their personal link stops working and their response is deleted. It can’t be undone.'
+            : 'Their response is deleted. It can’t be undone, and they can submit again via the invite link.'
+        }
+        pending={removeResponse.isPending}
         onConfirm={() => {
           if (!removing) return
-          removeGuest.mutate(removing.id, {
+          removeResponse.mutate(removing.id, {
             onSuccess: () => {
-              toast.success('Guest removed')
+              toast.success('Response removed')
             },
             onError: (error) => {
               toast.error(error.message)
