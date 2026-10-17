@@ -13,6 +13,8 @@ import { Route as AuthedRouteImport } from './routes/_authed'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as AuthedIndexRouteImport } from './routes/_authed/index'
+import { Route as AuthedMenusIndexRouteImport } from './routes/_authed/menus/index'
+import { Route as AuthedMenusMenuIdRouteImport } from './routes/_authed/menus/$menuId'
 
 const AuthedRoute = AuthedRouteImport.update({
   id: '/_authed',
@@ -33,16 +35,30 @@ const AuthedIndexRoute = AuthedIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthedRoute,
 } as any)
+const AuthedMenusIndexRoute = AuthedMenusIndexRouteImport.update({
+  id: '/menus/',
+  path: '/menus/',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedMenusMenuIdRoute = AuthedMenusMenuIdRouteImport.update({
+  id: '/menus/$menuId',
+  path: '/menus/$menuId',
+  getParentRoute: () => AuthedRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthedIndexRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/menus/$menuId': typeof AuthedMenusMenuIdRoute
+  '/menus/': typeof AuthedMenusIndexRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/': typeof AuthedIndexRoute
+  '/menus/$menuId': typeof AuthedMenusMenuIdRoute
+  '/menus': typeof AuthedMenusIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -50,13 +66,22 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/_authed/': typeof AuthedIndexRoute
+  '/_authed/menus/$menuId': typeof AuthedMenusMenuIdRoute
+  '/_authed/menus/': typeof AuthedMenusIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/register'
+  fullPaths: '/' | '/login' | '/register' | '/menus/$menuId' | '/menus/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/login' | '/register' | '/'
-  id: '__root__' | '/_authed' | '/login' | '/register' | '/_authed/'
+  to: '/login' | '/register' | '/' | '/menus/$menuId' | '/menus'
+  id:
+    | '__root__'
+    | '/_authed'
+    | '/login'
+    | '/register'
+    | '/_authed/'
+    | '/_authed/menus/$menuId'
+    | '/_authed/menus/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -95,15 +120,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedIndexRouteImport
       parentRoute: typeof AuthedRoute
     }
+    '/_authed/menus/': {
+      id: '/_authed/menus/'
+      path: '/menus'
+      fullPath: '/menus/'
+      preLoaderRoute: typeof AuthedMenusIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/menus/$menuId': {
+      id: '/_authed/menus/$menuId'
+      path: '/menus/$menuId'
+      fullPath: '/menus/$menuId'
+      preLoaderRoute: typeof AuthedMenusMenuIdRouteImport
+      parentRoute: typeof AuthedRoute
+    }
   }
 }
 
 interface AuthedRouteChildren {
   AuthedIndexRoute: typeof AuthedIndexRoute
+  AuthedMenusMenuIdRoute: typeof AuthedMenusMenuIdRoute
+  AuthedMenusIndexRoute: typeof AuthedMenusIndexRoute
 }
 
 const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedIndexRoute: AuthedIndexRoute,
+  AuthedMenusMenuIdRoute: AuthedMenusMenuIdRoute,
+  AuthedMenusIndexRoute: AuthedMenusIndexRoute,
 }
 
 const AuthedRouteWithChildren =

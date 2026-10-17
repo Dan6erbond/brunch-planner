@@ -73,6 +73,15 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Link to="/" className="font-heading text-lg font-semibold">
               Brunch Planner
             </Link>
+            <nav>
+              <Link
+                to="/menus"
+                className="text-sm text-muted-foreground hover:text-foreground"
+                activeProps={{ className: 'text-foreground' }}
+              >
+                Menus
+              </Link>
+            </nav>
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger
