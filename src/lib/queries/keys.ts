@@ -3,6 +3,9 @@ export const menuKeys = {
   lists: () => [...menuKeys.all, 'list'] as const,
   list: (userId: string) => [...menuKeys.lists(), userId] as const,
   detail: (id: string) => [...menuKeys.all, 'detail', id] as const,
+  collaborators: (id: string) =>
+    [...menuKeys.detail(id), 'collaborators'] as const,
+  role: (id: string) => [...menuKeys.detail(id), 'role'] as const,
 }
 
 export const brunchKeys = {
@@ -11,6 +14,9 @@ export const brunchKeys = {
   list: (userId: string) => [...brunchKeys.lists(), userId] as const,
   detail: (id: string) => [...brunchKeys.all, 'detail', id] as const,
   responses: (id: string) => [...brunchKeys.detail(id), 'responses'] as const,
+  collaborators: (id: string) =>
+    [...brunchKeys.detail(id), 'collaborators'] as const,
+  role: (id: string) => [...brunchKeys.detail(id), 'role'] as const,
 }
 
 export const inviteKeys = {

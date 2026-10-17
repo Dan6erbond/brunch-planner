@@ -8,6 +8,7 @@ import {
   Trash2Icon,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
 import {
   Card,
@@ -24,12 +25,14 @@ import {
 } from '#/components/ui/dropdown-menu'
 import {
   menuQueries,
+  type MenuListRow,
   useCreateMenu,
   useDeleteMenu,
   useUpdateMenu,
 } from '#/lib/queries/menus'
 import { useUserId } from '#/lib/queries/auth'
 import type { Tables } from '#/lib/supabase/database.types'
+import { menuRoleLabels } from './collaborator-roles'
 import { ConfirmDeleteDialog } from './confirm-delete-dialog'
 import { NameDescriptionDialog } from './name-description-dialog'
 
@@ -41,6 +44,8 @@ export function MenuList() {
   const navigate = useNavigate()
   const createMenu = useCreateMenu()
   const deleteMenu = useDeleteMenu()
+  const owned = menus.filter((menu) => menu.role === 'owner')
+  const shared = menus.filter((menu) => menu.role !== 'owner')
   const [creating, setCreating] = useState(false)
   const [renaming, setRenaming] = useState<MenuRow | null>(null)
   const [deleting, setDeleting] = useState<MenuRow | null>(null)
@@ -76,22 +81,25 @@ export function MenuList() {
           </Button>
         </div>
       ) : (
-        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {menus.map(({ items, ...menu }) => (
-            <li key={menu.id}>
-              <MenuCard
-                menu={menu}
-                itemCount={items[0]?.count ?? 0}
-                onRename={() => {
-                  setRenaming(menu)
-                }}
-                onDelete={() => {
-                  setDeleting(menu)
-                }}
+        <>
+          {owned.length > 0 && (
+            <MenuGrid
+              menus={owned}
+              onRename={setRenaming}
+              onDelete={setDeleting}
+            />
+          )}
+          {shared.length > 0 && (
+            <section className="grid gap-4">
+              <h2 className="text-lg font-medium">Shared with me</h2>
+              <MenuGrid
+                menus={shared}
+                onRename={setRenaming}
+                onDelete={setDeleting}
               />
-            </li>
-          ))}
-        </ul>
+            </section>
+          )}
+        </>
       )}
 
       <NameDescriptionDialog
@@ -170,13 +178,45 @@ function RenameMenuDialog({
   )
 }
 
+function MenuGrid({
+  menus,
+  onRename,
+  onDelete,
+}: {
+  menus: MenuListRow[]
+  onRename: (menu: MenuRow) => void
+  onDelete: (menu: MenuRow) => void
+}) {
+  return (
+    <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {menus.map(({ items, role, ...menu }) => (
+        <li key={menu.id}>
+          <MenuCard
+            menu={menu}
+            role={role}
+            itemCount={items[0]?.count ?? 0}
+            onRename={() => {
+              onRename(menu)
+            }}
+            onDelete={() => {
+              onDelete(menu)
+            }}
+          />
+        </li>
+      ))}
+    </ul>
+  )
+}
+
 function MenuCard({
   menu,
+  role,
   itemCount,
   onRename,
   onDelete,
 }: {
   menu: MenuRow
+  role: MenuListRow['role']
   itemCount: number
   onRename: () => void
   onDelete: () => void
@@ -196,28 +236,35 @@ function MenuCard({
         <CardDescription className="line-clamp-2">
           {menu.description ?? 'No description'}
         </CardDescription>
-        <p className="text-xs text-muted-foreground">
+        <p className="flex items-center gap-2 text-xs text-muted-foreground">
           {itemCount} {itemCount === 1 ? 'dish' : 'dishes'}
+          {role !== 'owner' && (
+            <Badge variant="secondary">{menuRoleLabels[role]}</Badge>
+          )}
         </p>
         <CardAction className="relative z-10">
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              render={<Button variant="ghost" size="icon-sm" />}
-            >
-              <MoreVerticalIcon />
-              <span className="sr-only">Menu actions</span>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={onRename}>
-                <PencilIcon />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem variant="destructive" onClick={onDelete}>
-                <Trash2Icon />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {role !== 'viewer' && (
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={<Button variant="ghost" size="icon-sm" />}
+              >
+                <MoreVerticalIcon />
+                <span className="sr-only">Menu actions</span>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={onRename}>
+                  <PencilIcon />
+                  Edit
+                </DropdownMenuItem>
+                {role === 'owner' && (
+                  <DropdownMenuItem variant="destructive" onClick={onDelete}>
+                    <Trash2Icon />
+                    Delete
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </CardAction>
       </CardHeader>
     </Card>

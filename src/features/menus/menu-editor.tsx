@@ -3,9 +3,11 @@ import { Link, useNavigate } from '@tanstack/react-router'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import {
   ArrowLeftIcon,
+  LogOutIcon,
   MoreVerticalIcon,
   PencilIcon,
   PlusIcon,
+  Share2Icon,
   Trash2Icon,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -16,6 +18,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '#/components/ui/dropdown-menu'
+import { useUserId } from '#/lib/queries/auth'
+import {
+  useMenuRole,
+  useRemoveMenuCollaborator,
+} from '#/lib/queries/menu-collaborators'
 import {
   menuQueries,
   type MenuItemDetail,
@@ -28,6 +35,7 @@ import { ConfirmDeleteDialog } from './confirm-delete-dialog'
 import { MenuItemEditSheet } from './menu-item-edit-sheet'
 import { MenuItemList } from './menu-item-list'
 import { NameDescriptionDialog } from './name-description-dialog'
+import { ShareMenuDialog } from './share-menu-dialog'
 
 type ItemRow = MenuItemDetail
 
@@ -38,6 +46,12 @@ export function MenuEditor({ menuId }: { menuId: string }) {
   const deleteMenu = useDeleteMenu()
   const deleteItem = useDeleteItem(menuId)
   const reorder = useReorderItems()
+  const userId = useUserId()
+  const role = useMenuRole(menuId)
+  const leaveMenu = useRemoveMenuCollaborator(menuId)
+  const isOwner = role === 'owner'
+  const canEdit = isOwner || role === 'editor'
+  const [sharing, setSharing] = useState(false)
   const [editingMenu, setEditingMenu] = useState(false)
   const [deletingMenu, setDeletingMenu] = useState(false)
   const [itemSheetOpen, setItemSheetOpen] = useState(false)
@@ -90,23 +104,55 @@ export function MenuEditor({ menuId }: { menuId: string }) {
               <span className="sr-only">Menu actions</span>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={() => {
-                  setEditingMenu(true)
-                }}
-              >
-                <PencilIcon />
-                Edit menu
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                variant="destructive"
-                onClick={() => {
-                  setDeletingMenu(true)
-                }}
-              >
-                <Trash2Icon />
-                Delete menu
-              </DropdownMenuItem>
+              {canEdit && (
+                <DropdownMenuItem
+                  onClick={() => {
+                    setEditingMenu(true)
+                  }}
+                >
+                  <PencilIcon />
+                  Edit menu
+                </DropdownMenuItem>
+              )}
+              {isOwner && (
+                <DropdownMenuItem
+                  onClick={() => {
+                    setSharing(true)
+                  }}
+                >
+                  <Share2Icon />
+                  Share
+                </DropdownMenuItem>
+              )}
+              {!isOwner && (
+                <DropdownMenuItem
+                  onClick={() => {
+                    leaveMenu.mutate(userId, {
+                      onSuccess: () => {
+                        toast.success('You left the menu')
+                        void navigate({ to: '/menus' })
+                      },
+                      onError: (error) => {
+                        toast.error(error.message)
+                      },
+                    })
+                  }}
+                >
+                  <LogOutIcon />
+                  Leave
+                </DropdownMenuItem>
+              )}
+              {isOwner && (
+                <DropdownMenuItem
+                  variant="destructive"
+                  onClick={() => {
+                    setDeletingMenu(true)
+                  }}
+                >
+                  <Trash2Icon />
+                  Delete menu
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -114,14 +160,16 @@ export function MenuEditor({ menuId }: { menuId: string }) {
 
       <div className="flex items-center justify-between gap-4">
         <h2 className="text-lg font-medium">Dishes</h2>
-        <Button
-          onClick={() => {
-            openItemSheet(null)
-          }}
-        >
-          <PlusIcon />
-          Add dish
-        </Button>
+        {canEdit && (
+          <Button
+            onClick={() => {
+              openItemSheet(null)
+            }}
+          >
+            <PlusIcon />
+            Add dish
+          </Button>
+        )}
       </div>
 
       {items.length === 0 ? (
@@ -134,6 +182,7 @@ export function MenuEditor({ menuId }: { menuId: string }) {
       ) : (
         <MenuItemList
           items={items}
+          readOnly={!canEdit}
           onReorder={(itemIds) => {
             reorder.mutate(
               { menuId, itemIds },
@@ -149,6 +198,13 @@ export function MenuEditor({ menuId }: { menuId: string }) {
         />
       )}
 
+      {isOwner && (
+        <ShareMenuDialog
+          menuId={menuId}
+          open={sharing}
+          onOpenChange={setSharing}
+        />
+      )}
       <NameDescriptionDialog
         open={editingMenu}
         onOpenChange={setEditingMenu}

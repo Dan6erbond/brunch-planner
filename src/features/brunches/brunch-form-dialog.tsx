@@ -71,10 +71,9 @@ function BrunchForm({
       }
     },
   })
-  const menuOptions = menus.map((menu) => ({
-    value: menu.id,
-    label: menu.name,
-  }))
+  const menuOptions = menus
+    .filter((menu) => menu.role === 'owner')
+    .map((menu) => ({ value: menu.id, label: menu.name }))
 
   return (
     <form

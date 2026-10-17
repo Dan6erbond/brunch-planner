@@ -26,13 +26,25 @@ export const menuQueries = {
       queryKey: menuKeys.list(userId),
       staleTime: 30_000,
       queryFn: async () => {
+        const { data: shared, error: sharedError } = await supabase
+          .from('menu_collaborators')
+          .select('menu_id, role')
+          .eq('user_id', userId)
+        if (sharedError) throw sharedError
+        const roles = new Map(shared.map((row) => [row.menu_id, row.role]))
+        const filter = [`owner_id.eq.${userId}`]
+        if (roles.size > 0)
+          filter.push(`id.in.(${[...roles.keys()].join(',')})`)
         const { data, error } = await supabase
           .from('menus')
           .select('*, items(count)')
-          .eq('owner_id', userId)
+          .or(filter.join(','))
           .order('created_at', { ascending: false })
         if (error) throw error
-        return data
+        return data.map((menu) => ({
+          ...menu,
+          role: roles.get(menu.id) ?? ('owner' as const),
+        }))
       },
     }),
   detail: (id: string) =>
@@ -64,6 +76,11 @@ export const menuQueries = {
       },
     }),
 }
+
+export type MenuListRow = InferDataFromTag<
+  unknown,
+  ReturnType<typeof menuQueries.list>['queryKey']
+>[number]
 
 export type MenuDetail = NonNullable<
   InferDataFromTag<unknown, ReturnType<typeof menuQueries.detail>['queryKey']>
