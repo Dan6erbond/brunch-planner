@@ -260,6 +260,7 @@ same reusable command instead of retyping flags:
     "supabase:stop": "supabase stop",
     "supabase:status": "supabase status",
     "supabase:migration:new": "supabase migration new",
+    "supabase:migration:up": "supabase migration up --local",
     "supabase:db:push": "supabase db push",
     "supabase:db:reset": "supabase db reset",
     "supabase:types": "supabase gen types typescript --local > src/lib/supabase/database.types.ts",
@@ -269,7 +270,10 @@ same reusable command instead of retyping flags:
 ```
 
 Usage: `npm run supabase:migration:new -- add_menus_table`,
-`npm run ui:add -- button dialog`.
+`npm run ui:add -- button dialog`. Apply new migrations to the local DB with
+`npm run supabase:migration:up` (non-destructive); `supabase:db:reset` wipes
+local data (menus, accounts), so only use it when a migration cannot apply
+otherwise, and ask first.
 
 shadcn writes imports straight from the `components.json` aliases, so those
 must stay `#/...` (matching `tsconfig.json` `paths`). Don't add an `@/*` path

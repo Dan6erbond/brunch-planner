@@ -129,10 +129,13 @@ export function useCreateItem(menuId: string) {
   })
 }
 
-export function useUpdateItem(menuId: string, itemId: string) {
+export function useUpdateItem(menuId: string) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (input: ItemInput) => {
+    mutationFn: async ({
+      itemId,
+      ...input
+    }: ItemInput & { itemId: string }) => {
       const { name, description } = itemSchema.parse(input)
       const { error } = await supabase
         .from('items')
@@ -161,14 +164,32 @@ export function useReorderItems() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (input: ReorderItemsInput) => {
-      const { itemIds } = reorderItemsSchema.parse(input)
-      const results = await Promise.all(
-        itemIds.map((id, position) =>
-          supabase.from('items').update({ position }).eq('id', id),
-        ),
+      const { menuId, itemIds } = reorderItemsSchema.parse(input)
+      const { error } = await supabase.rpc('reorder_items', {
+        p_menu_id: menuId,
+        p_item_ids: itemIds,
+      })
+      if (error) throw error
+    },
+    onMutate: async ({ menuId, itemIds }) => {
+      const queryKey = menuKeys.detail(menuId)
+      await queryClient.cancelQueries({ queryKey })
+      const previous = queryClient.getQueryData(
+        menuQueries.detail(menuId).queryKey,
       )
-      const failed = results.find((result) => result.error)
-      if (failed?.error) throw failed.error
+      queryClient.setQueryData(menuQueries.detail(menuId).queryKey, (menu) => {
+        if (!menu) return menu
+        const byId = new Map(menu.items.map((item) => [item.id, item]))
+        const items = itemIds.flatMap((id) => byId.get(id) ?? [])
+        return { ...menu, items }
+      })
+      return { previous }
+    },
+    onError: (_error, { menuId }, context) => {
+      queryClient.setQueryData(
+        menuQueries.detail(menuId).queryKey,
+        context?.previous,
+      )
     },
     onSettled: (_data, _error, { menuId }) =>
       queryClient.invalidateQueries({ queryKey: menuKeys.detail(menuId) }),
