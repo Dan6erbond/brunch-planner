@@ -64,8 +64,7 @@ export function RsvpForm({ invite, response }: RsvpFormProps) {
         <Alert>
           <AlertTitle>You’ve told the host you can’t make it</AlertTitle>
           <AlertDescription>
-            Changed your mind? Pick what you’d like below and send your
-            response.
+            Changed your mind? Send your RSVP below, picking food is optional.
           </AlertDescription>
         </Alert>
       )}
@@ -106,6 +105,9 @@ export function RsvpForm({ invite, response }: RsvpFormProps) {
 
       <div className="grid gap-3">
         <h2 className="text-lg font-semibold">What would you like?</h2>
+        <p className="-mt-1 text-sm text-muted-foreground">
+          Optional. You can RSVP without choosing food.
+        </p>
         {invite.menu.items.map((item, index) => (
           <Card key={item.id}>
             <CardContent className="grid gap-4">
@@ -167,19 +169,6 @@ export function RsvpForm({ invite, response }: RsvpFormProps) {
             </CardContent>
           </Card>
         ))}
-        <form.Subscribe
-          selector={(state) =>
-            state.values.items.some((item) => item.quantity > 0)
-          }
-        >
-          {(hasItems) =>
-            !hasItems && (
-              <p className="text-sm text-muted-foreground">
-                Choose at least one item.
-              </p>
-            )
-          }
-        </form.Subscribe>
       </div>
 
       <FieldGroup>
@@ -198,7 +187,7 @@ export function RsvpForm({ invite, response }: RsvpFormProps) {
         <form.SubmitButton
           size="lg"
           className="h-12 w-full text-base"
-          label={response ? 'Update my response' : 'Send my response'}
+          label={response && !isDeclined ? 'Update my RSVP' : 'Send RSVP'}
           pendingLabel="Sending…"
         />
         {!isDeclined && (

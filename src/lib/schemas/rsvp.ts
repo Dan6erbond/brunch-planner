@@ -54,11 +54,7 @@ export const rsvpSchema = z.object({
     .min(1, 'Enter your name')
     .max(80, 'Keep it under 80 characters'),
   notes: z.string().trim().max(500, 'Keep it under 500 characters'),
-  items: z
-    .array(rsvpItemSchema)
-    .refine((items) => items.some((item) => item.quantity > 0), {
-      message: 'Choose at least one item',
-    }),
+  items: z.array(rsvpItemSchema),
   dateVotes: z.array(dateVoteSchema),
 })
 export const declineSchema = rsvpSchema.pick({ guestName: true, notes: true })
