@@ -26,12 +26,12 @@ create/edit menus, create brunches. The guest/invite side stays public for now.
 
 ## Tech stack & constraints
 
-- **Hosting**: Netlify (static), **Supabase free tier** for DB/Auth/RLS. This
+- **Hosting**: Cloudflare Workers (static assets), **Supabase free tier** for DB/Auth/RLS. This
   means: no custom backend server, no server-side secrets beyond the public
   anon key. Everything talks to Supabase directly from the client.
 - **Client-side only.** This repo is TanStack Router in `routerOnly` mode
   (see `.cta.json`) — there is no TanStack Start server. Don't add
-  `createServerFn` / API routes; they don't fit the Netlify-static + Supabase
+  `createServerFn` / API routes; they don't fit the Workers-static + Supabase
   model. All data access goes through the Supabase REST (PostgREST) or
   GraphQL API via `@supabase/supabase-js`.
 - **Data**: TanStack Query for all server state. No ad-hoc `useEffect` fetches.
