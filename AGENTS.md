@@ -303,6 +303,22 @@ otherwise, and ask first. Scripts ending in `:remote` hit the hosted project
 shows which project is `linked`, `supabase:migration:list` compares local vs
 remote migrations). Only run `:remote` scripts with the user's approval.
 
+A migration only takes effect in production once it is pushed to the hosted
+project, and the deployed code depends on that. So before committing and pushing
+a change that includes a migration, ask the user when to apply it to hosted
+Supabase relative to the code deploy, recommending one by migration type:
+
+- **Before** the deploy: additive, backwards-compatible changes the new code
+  needs (new tables, columns, enums, functions, policies the old code tolerates).
+- **In parallel** with the deploy: changes both old and new code run fine
+  against, where ordering does not matter.
+- **After** the deploy: destructive changes (dropping or renaming columns,
+  tables or enums, tightening policies or constraints the old code still relies
+  on), so the previous code never runs against a schema it cannot use.
+
+Run `npm run supabase:migration:list` first to show what is pending, then wait
+for the user's go-ahead and chosen timing before any `:remote` script.
+
 shadcn writes imports straight from the `components.json` aliases, so those
 must stay `#/...` (matching `tsconfig.json` `paths`). Don't add an `@/*` path
 alias or a `package.json` `imports` map: the former makes generated files use
