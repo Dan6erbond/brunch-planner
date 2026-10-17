@@ -19,6 +19,8 @@ export const brunchKeys = {
   collaborators: (id: string) =>
     [...brunchKeys.detail(id), 'collaborators'] as const,
   role: (id: string) => [...brunchKeys.detail(id), 'role'] as const,
+  shoppingChecks: (id: string) =>
+    [...brunchKeys.detail(id), 'shopping-checks'] as const,
 }
 
 export const inviteKeys = {

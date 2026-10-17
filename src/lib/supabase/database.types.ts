@@ -409,6 +409,38 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"shopping_list_checks": {
+                  Row: {
+                    "brunch_id": string,"checked_by": string | null,"created_at": string,"line_key": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "brunch_id": string,"checked_by"?: string | null,"created_at"?: string,"line_key": string
+                  }
+                  Update: {
+                    "brunch_id"?: string,"checked_by"?: string | null,"created_at"?: string,"line_key"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "shopping_list_checks_brunch_id_fkey"
+      columns: ["brunch_id"]
+isOneToOne: false
+      referencedRelation: "brunches"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "shopping_list_checks_brunch_id_fkey"
+      columns: ["brunch_id"]
+isOneToOne: false
+      referencedRelation: "brunches_with_status"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "shopping_list_checks_checked_by_fkey"
+      columns: ["checked_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 }
           }
           Views: {

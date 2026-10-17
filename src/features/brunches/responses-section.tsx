@@ -4,6 +4,7 @@ import { ChevronDownIcon, CopyIcon, Trash2Icon } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
+import { Checkbox } from '#/components/ui/checkbox'
 import {
   Card,
   CardContent,
@@ -22,6 +23,11 @@ import { formatShortDayTime } from '#/lib/date'
 import { brunchQueries, type BrunchResponse } from '#/lib/queries/brunches'
 import { useRemoveResponse } from '#/lib/queries/guests'
 import { menuQueries, type MenuDetail } from '#/lib/queries/menus'
+import {
+  shoppingListQueries,
+  useToggleShoppingCheck,
+} from '#/lib/queries/shopping-list'
+import { cn } from 'cn'
 import {
   countGuests,
   describePicks,
@@ -129,7 +135,12 @@ function ResponsesTabs({
               <ItemSummary menu={menu} responses={responses} />
             </TabsContent>
             <TabsContent value="shopping">
-              <ShoppingList menu={menu} responses={responses} />
+              <ShoppingList
+                brunchId={brunchId}
+                menu={menu}
+                responses={responses}
+                canManage={canManage}
+              />
             </TabsContent>
           </Tabs>
         )}
@@ -351,13 +362,21 @@ function CountRow({ label, count }: { label: string; count: number }) {
 }
 
 function ShoppingList({
+  brunchId,
   menu,
   responses,
+  canManage,
 }: {
+  brunchId: string
   menu: MenuDetail
   responses: BrunchResponse[]
+  canManage: boolean
 }) {
   const list = buildShoppingList(menu, responses)
+  const { data: checkedKeys } = useSuspenseQuery(
+    shoppingListQueries.checks(brunchId),
+  )
+  const toggle = useToggleShoppingCheck(brunchId)
   if (isShoppingListEmpty(list)) {
     return (
       <p className="text-sm text-muted-foreground">
@@ -365,6 +384,22 @@ function ShoppingList({
       </p>
     )
   }
+  const checked = new Set(checkedKeys)
+  const renderCheck = (lineKey: string, label: string) => (
+    <Checkbox
+      aria-label={label}
+      checked={checked.has(lineKey)}
+      disabled={!canManage}
+      onCheckedChange={(value) => {
+        toggle.mutate(
+          { lineKey, checked: value },
+          { onError: (error) => toast.error(error.message) },
+        )
+      }}
+    />
+  )
+  const struck = (lineKey: string) =>
+    cn(checked.has(lineKey) && 'text-muted-foreground line-through')
   return (
     <div className="grid gap-3">
       <Button
@@ -387,12 +422,20 @@ function ShoppingList({
       <ul className="grid gap-1 text-sm">
         {list.ingredients.map((line) => (
           <li
-            key={`${line.name.toLowerCase()}|${line.unit ?? ''}`}
-            className="flex justify-between gap-3 border-b py-1.5 last:border-b-0"
+            key={line.key}
+            className="flex items-center gap-3 border-b py-1.5 last:border-b-0"
           >
-            <span className="break-words">{line.name}</span>
-            <span className="shrink-0 text-muted-foreground">
-              {formatAmount(line)}
+            {renderCheck(line.key, line.name)}
+            <span
+              className={cn(
+                'flex min-w-0 flex-1 justify-between gap-3',
+                struck(line.key),
+              )}
+            >
+              <span className="break-words">{line.name}</span>
+              <span className="shrink-0 text-muted-foreground">
+                {formatAmount(line)}
+              </span>
             </span>
           </li>
         ))}
@@ -404,11 +447,19 @@ function ShoppingList({
           </p>
           <ul className="grid gap-1">
             {list.itemsWithoutIngredients.map((item) => (
-              <li key={item.name} className="border-b py-1.5 last:border-b-0">
-                <p className="flex justify-between gap-3">
-                  <span className="break-words">{item.name}</span>
-                  <span className="shrink-0 text-muted-foreground">
-                    x{item.quantity}
+              <li key={item.key} className="border-b py-1.5 last:border-b-0">
+                <p className="flex items-center gap-3">
+                  {renderCheck(item.key, item.name)}
+                  <span
+                    className={cn(
+                      'flex min-w-0 flex-1 justify-between gap-3',
+                      struck(item.key),
+                    )}
+                  >
+                    <span className="break-words">{item.name}</span>
+                    <span className="shrink-0 text-muted-foreground">
+                      x{item.quantity}
+                    </span>
                   </span>
                 </p>
                 {[
@@ -416,11 +467,19 @@ function ShoppingList({
                   ...item.addons.map((a) => ({ ...a, label: `+ ${a.name}` })),
                 ].map((pick) => (
                   <p
-                    key={pick.label}
-                    className="flex justify-between gap-3 pl-4 text-muted-foreground"
+                    key={pick.key}
+                    className="flex items-center gap-3 pt-1 pl-4 text-muted-foreground"
                   >
-                    <span className="break-words">{pick.label}</span>
-                    <span className="shrink-0">x{pick.quantity}</span>
+                    {renderCheck(pick.key, pick.label)}
+                    <span
+                      className={cn(
+                        'flex min-w-0 flex-1 justify-between gap-3',
+                        struck(pick.key),
+                      )}
+                    >
+                      <span className="break-words">{pick.label}</span>
+                      <span className="shrink-0">x{pick.quantity}</span>
+                    </span>
                   </p>
                 ))}
               </li>

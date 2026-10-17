@@ -7,13 +7,14 @@ import { isAttending } from './response-summary'
 type Ingredient = MenuDetail['items'][number]['ingredients'][number]
 
 export type ShoppingLine = {
+  key: string
   name: string
   unit: Enums<'ingredient_unit'> | null
   quantity: number
   hasUnspecifiedAmount: boolean
 }
 
-type Counted = { name: string; quantity: number }
+type Counted = { key: string; name: string; quantity: number }
 
 export type ShoppingItemLine = Counted & {
   choices: Counted[]
@@ -24,6 +25,17 @@ export type ShoppingList = {
   ingredients: ShoppingLine[]
   itemsWithoutIngredients: ShoppingItemLine[]
 }
+
+export const ingredientLineKey = (
+  name: string,
+  unit: Enums<'ingredient_unit'> | null,
+) => `ing:${name.toLowerCase()}|${unit ?? ''}`
+
+export const itemLineKey = (itemId: string) => `item:${itemId}`
+export const choiceLineKey = (itemId: string, choiceId: string) =>
+  `${itemLineKey(itemId)}:choice:${choiceId}`
+export const addonLineKey = (itemId: string, addonId: string) =>
+  `${itemLineKey(itemId)}:addon:${addonId}`
 
 const round = (value: number) => Math.round(value * 10_000) / 10_000
 
@@ -54,8 +66,9 @@ export function buildShoppingList(
     servings: number,
   ) => {
     const name = ingredient.name?.trim() || fallbackName
-    const key = `${name.toLowerCase()}|${ingredient.unit ?? ''}`
+    const key = ingredientLineKey(name, ingredient.unit)
     const line = lines.get(key) ?? {
+      key,
       name,
       unit: ingredient.unit,
       quantity: 0,
@@ -70,6 +83,7 @@ export function buildShoppingList(
   }
 
   type Tally = {
+    key: string
     name: string
     quantity: number
     choices: Map<string, Counted>
@@ -79,10 +93,11 @@ export function buildShoppingList(
   const bump = (
     map: Map<string, Counted>,
     id: string,
+    key: string,
     name: string,
     n: number,
   ) => {
-    const entry = map.get(id) ?? { name, quantity: 0 }
+    const entry = map.get(id) ?? { key, name, quantity: 0 }
     entry.quantity += n
     map.set(id, entry)
   }
@@ -92,6 +107,7 @@ export function buildShoppingList(
       const item = items.get(line.item_id)
       if (!item) continue
       const tally = tallies.get(item.id) ?? {
+        key: itemLineKey(item.id),
         name: item.name,
         quantity: 0,
         choices: new Map(),
@@ -107,7 +123,13 @@ export function buildShoppingList(
         const choice = choices.get(option_choice_id)
         if (!choice) continue
         if (choice.ingredients.length === 0) {
-          bump(tally.choices, choice.id, choice.name, line.quantity)
+          bump(
+            tally.choices,
+            choice.id,
+            choiceLineKey(item.id, choice.id),
+            choice.name,
+            line.quantity,
+          )
         }
         for (const ingredient of choice.ingredients) {
           add(ingredient, choice.name, line.quantity)
@@ -117,7 +139,13 @@ export function buildShoppingList(
         const addon = addons.get(addon_id)
         if (!addon) continue
         if (addon.ingredients.length === 0) {
-          bump(tally.addons, addon.id, addon.name, line.quantity)
+          bump(
+            tally.addons,
+            addon.id,
+            addonLineKey(item.id, addon.id),
+            addon.name,
+            line.quantity,
+          )
         }
         for (const ingredient of addon.ingredients) {
           add(ingredient, addon.name, line.quantity)
@@ -136,6 +164,7 @@ export function buildShoppingList(
         tally.addons.size > 0,
     )
     .map(([, tally]) => ({
+      key: tally.key,
       name: tally.name,
       quantity: tally.quantity,
       choices: [...tally.choices.values()].sort(byName),
